@@ -1,0 +1,1329 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="你的第二人格是什么？十二道题，照见你白天与深夜不同的那一面。输入测试码即可开始。">
+<title>你的第二人格是什么？｜趣味心理测试</title>
+<!--
+  ════════════════════════════════════════════════════════════
+  买家修改指南（重要）
+  ─ 品牌名 / 标题 / 题目 / 结果 / 配色，全部在文件下方 JS 的 CONFIG 里改，
+    不要动其他代码。
+  ─ 测试码由 Supabase 云端管理：数据库只存哈希，不存明文。
+    本文件内置码池已移除，只保留 sha256 计算（输码后把哈希发到服务端校验）。
+    新码请在管理后台 admin.html 登录后一键生成。
+  ─ Supabase 接入：CONFIG.supabase 填项目 URL 与 anon key。
+  ─ 每个码最多完成 2 次测试（答完出结果才扣次数，服务端原子扣减）。
+  ════════════════════════════════════════════════════════════
+-->
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='12' cy='16' r='8' fill='%236B5BD3'/%3E%3Ccircle cx='20' cy='16' r='8' fill='%23E0506B' opacity='0.85'/%3E%3C/svg%3E">
+<style>
+/* ================= 基础 ================= */
+:root{
+  --bg:#F4F0E8; --card:#FFFFFF; --ink:#221F33; --sub:#8B8698; --line:#E6E0D4;
+  --accent:#6B5BD3; --accent-soft:#F1EEFB; --hot:#E0506B; --ok:#3E8E6E;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:var(--bg);color:var(--ink);
+  font-family:"PingFang SC","HarmonyOS Sans SC","Microsoft YaHei","Helvetica Neue",Arial,sans-serif;
+  line-height:1.65;-webkit-tap-highlight-color:transparent;
+}
+button{font:inherit;border:0;background:none;color:inherit}
+a{text-decoration:none;color:inherit}
+button:focus-visible{outline:3px solid color-mix(in srgb, var(--accent) 55%, transparent);outline-offset:2px}
+.stage{max-width:620px;margin:0 auto;min-height:100vh;padding:calc(env(safe-area-inset-top) + 20px) 22px calc(env(safe-area-inset-bottom) + 20px)}
+.view{display:flex;flex-direction:column;min-height:calc(100vh - 40px);animation:fadeUp .35s ease both}
+.view.is-hidden{display:none}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.view{animation:none}.progress-fill,.bar-fill{transition:none}}
+
+/* ================= 通用组件 ================= */
+.btn{
+  min-height:48px;border-radius:14px;font-size:16px;font-weight:600;
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  padding:0 22px;cursor:pointer;transition:background .15s,opacity .15s,transform .05s;
+  touch-action:manipulation;user-select:none;-webkit-user-select:none;
+}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:var(--accent);color:#fff;flex:1}
+.btn-primary:hover{background:#5C4CC4}
+.btn-primary:disabled{opacity:.42;cursor:not-allowed}
+.btn-ghost{background:transparent;border:1.5px solid var(--line);color:var(--sub)}
+.btn-ghost:hover{color:var(--ink);border-color:var(--sub)}
+.btn-block{width:100%}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;box-shadow:0 10px 30px rgba(34,31,51,.06)}
+.hl{color:var(--hot)}
+.eyebrow{font-size:13px;letter-spacing:.14em;color:var(--sub)}
+
+/* ================= 封面 ================= */
+.cover{justify-content:center;text-align:center;padding:30px 4px}
+.brand{
+  display:inline-flex;align-items:center;gap:9px;padding:8px 16px;
+  border:1px solid var(--line);border-radius:999px;background:var(--card);
+  color:var(--sub);font-size:13px;font-weight:500;
+}
+.brand .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);flex:none}
+.duo-mark{width:88px;height:88px;margin:28px auto 22px;display:block;color:var(--accent)}
+.title{font-weight:800;line-height:1.3;letter-spacing:.02em}
+.title .l1{display:block;font-size:18px;font-weight:600;color:var(--sub);letter-spacing:.3em}
+.title .l2{display:block;font-size:42px;margin-top:2px}
+.title .l3{display:block;font-size:21px;font-weight:700;margin-top:4px}
+.sub{font-size:15px;color:var(--sub);margin-top:16px}
+.intro{font-size:14.5px;color:#5A5568;margin:16px auto 0;max-width:400px}
+.code-box{text-align:left;margin-top:26px}
+.code-label{font-size:13px;font-weight:600;color:var(--sub);letter-spacing:.06em}
+#code-input{
+  width:100%;height:52px;margin-top:10px;padding:0 16px;font-size:17px;
+  border:1.5px solid var(--line);border-radius:14px;background:#fff;color:var(--ink);
+  outline:none;transition:border-color .15s;
+}
+#code-input:focus{border-color:var(--accent)}
+.code-hint{font-size:12.5px;color:var(--sub);margin-top:9px}
+.code-error{font-size:13px;color:var(--hot);margin-top:8px;min-height:18px}
+.cover-cta{margin-top:16px}
+.disclaimer{font-size:12.5px;color:var(--sub);margin-top:22px}
+
+/* ================= 答题 ================= */
+.quiz{padding-top:10px}
+.quiz-top{display:flex;align-items:center;gap:12px;margin-bottom:22px}
+.progress-track{flex:1;height:6px;background:var(--line);border-radius:999px;overflow:hidden}
+.progress-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--accent),#8E7CFF);border-radius:999px;transition:width .4s ease}
+.q-count{font-size:13px;color:var(--sub);white-space:nowrap;font-variant-numeric:tabular-nums}
+.q-card{padding:28px 22px}
+.q-no{font-size:13px;font-weight:600;letter-spacing:.08em;color:var(--accent)}
+.q-text{font-size:20px;font-weight:700;line-height:1.45;margin-top:10px}
+.options{display:flex;flex-direction:column;gap:12px;margin-top:24px}
+.option{
+  display:flex;align-items:flex-start;gap:12px;width:100%;text-align:left;
+  padding:14px 15px;background:var(--card);border:1.5px solid var(--line);
+  border-radius:14px;font-size:15px;line-height:1.5;cursor:pointer;
+  transition:border-color .15s,background .15s,transform .05s;touch-action:manipulation;
+}
+.option:active{transform:scale(.99)}
+.option .key{
+  flex:none;width:26px;height:26px;border-radius:50%;border:1.5px solid var(--line);
+  display:grid;place-items:center;font-size:13px;font-weight:600;color:var(--sub);
+  transition:background .15s,border-color .15s,color .15s;margin-top:2px;
+}
+.option.is-on{border-color:var(--accent);background:var(--accent-soft)}
+.option.is-on .key{background:var(--accent);border-color:var(--accent);color:#fff}
+.quiz-nav{display:flex;gap:12px;margin-top:24px}
+
+/* ================= 结果 ================= */
+.result{padding-top:16px}
+.result-head{text-align:center;padding:14px 4px 4px}
+.shared-banner{
+  display:inline-block;margin-top:10px;padding:5px 14px;border-radius:999px;
+  background:var(--accent-soft);color:var(--accent);font-size:12.5px;font-weight:600;
+}
+.result-name{font-size:34px;font-weight:800;line-height:1.3;margin-top:8px}
+.result-tagline{font-size:15px;color:#5A5568;margin-top:10px}
+.result-card{padding:22px;margin-top:16px}
+.block-title{font-size:13px;font-weight:600;letter-spacing:.08em;color:var(--accent);margin-bottom:10px}
+.desc-list{list-style:none}
+.desc-list li{position:relative;padding-left:16px;font-size:15px;color:#423D55;margin-bottom:9px}
+.desc-list li::before{content:"";position:absolute;left:2px;top:10px;width:5px;height:5px;border-radius:50%;background:var(--hot)}
+.why-text{font-size:15px;color:#423D55;line-height:1.75}
+.two-col{display:grid;gap:14px}
+.mini{background:#FAF7F0;border-radius:14px;padding:14px 15px}
+.mini-h{font-size:13px;font-weight:600;color:#4A3FA8;margin-bottom:8px}
+.dot-list{list-style:none}
+.dot-list li{position:relative;padding-left:15px;font-size:14px;color:#5A5568;margin-bottom:7px}
+.dot-list li::before{content:"";position:absolute;left:1px;top:8px;width:5px;height:5px;border-radius:50%;background:var(--accent)}
+.dot-list.mine li::before{background:var(--hot)}
+.tags{display:flex;flex-wrap:wrap;gap:8px}
+.tag{padding:5px 12px;border-radius:999px;background:var(--accent-soft);color:#4A3FA8;font-size:13px;font-weight:500}
+.tips{display:grid;gap:12px}
+.tip{background:#FAF7F0;border-radius:14px;padding:14px 15px;font-size:14px;color:#5A5568}
+.tip b{display:block;font-size:13px;color:#4A3FA8;margin-bottom:4px}
+.cp-line{font-size:15px;color:#423D55;line-height:1.7}
+.cp-line .cp-name{color:var(--accent);font-weight:700}
+.quote{
+  margin-top:18px;padding:22px;border-radius:20px;background:linear-gradient(135deg,var(--accent),#7B6AE0);
+  color:#fff;text-align:center;
+}
+.quote .q-mark{font-size:30px;line-height:1;opacity:.85}
+.quote p{font-size:16.5px;font-weight:600;line-height:1.7;margin-top:8px}
+.quote .q-src{font-size:12.5px;opacity:.75;margin-top:10px}
+.type-bars{margin-top:20px}
+.bar-row{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.bar-row .lbl{width:96px;font-size:14px;font-weight:600;flex:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar-track{flex:1;height:10px;background:#EFEBE3;border-radius:999px;overflow:hidden}
+.bar-fill{height:100%;width:0%;border-radius:999px;background:linear-gradient(90deg,var(--accent),#8E7CFF);transition:width .9s ease}
+.bar-row .pct{width:46px;text-align:right;font-size:14px;color:var(--sub);flex:none;font-variant-numeric:tabular-nums}
+.shadow-line{font-size:13.5px;color:var(--sub);margin-top:4px}
+.result-actions{display:flex;flex-direction:column;gap:12px;margin-top:26px;padding-bottom:10px}
+.share-tip{text-align:center;font-size:13px;color:var(--sub);margin-top:16px}
+.foot-note{text-align:center;font-size:12px;color:var(--sub);margin-top:20px;padding-bottom:20px}
+
+/* ================= 保存长图弹层 ================= */
+.overlay{position:fixed;inset:0;background:rgba(34,31,51,.55);z-index:50;display:flex;align-items:center;justify-content:center;padding:20px}
+.overlay.is-hidden{display:none}
+.overlay-box{background:#fff;border-radius:20px;max-width:430px;width:100%;max-height:88vh;overflow:auto;padding:20px;text-align:center}
+.overlay-title{font-size:16px;font-weight:700;margin-bottom:12px}
+.overlay-box img{width:100%;border-radius:12px;display:block}
+.overlay-hint{font-size:13px;color:var(--sub);margin:12px 0 4px}
+.overlay-actions{display:flex;gap:10px;margin-top:10px}
+.overlay-actions .btn{flex:1}
+
+/* ================= Toast ================= */
+.toast{
+  position:fixed;left:50%;bottom:64px;transform:translateX(-50%) translateY(20px);
+  background:#221F33;color:#fff;padding:10px 18px;border-radius:999px;font-size:14px;
+  opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:60;
+  max-width:86vw;text-align:center;
+}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ================= 桌面适配 ================= */
+@media (min-width:768px){
+  .stage{padding-top:40px;padding-bottom:40px}
+  .title .l2{font-size:54px}
+  .result-name{font-size:42px}
+  .tips,.two-col{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <!-- ═══ 视图：封面（测试码门禁） ═══ -->
+  <section id="view-cover" class="view cover" aria-label="测试封面">
+    <span class="brand"><span class="dot"></span><span id="brand-text">LOGO｜你的品牌名</span></span>
+    <svg class="duo-mark" viewBox="0 0 96 96" fill="none" aria-hidden="true">
+      <circle cx="38" cy="48" r="26" fill="currentColor" opacity="0.28"/>
+      <circle cx="58" cy="48" r="26" fill="currentColor" opacity="0.62"/>
+      <circle cx="48" cy="48" r="9" fill="none" stroke="currentColor" stroke-width="2.5"/>
+    </svg>
+    <h1 class="title">
+      <span class="l1">你的</span>
+      <span class="l2"><span class="hl" id="cover-hl">第二人格</span></span>
+      <span class="l3">是什么？</span>
+    </h1>
+    <p class="sub" id="cover-sub">十二道题，照见你白天与深夜不同的那一面。</p>
+    <p class="intro" id="cover-intro">白天得体周到，深夜却藏着一点陌生、一点锋利、一点不肯妥协。那个住在你身体里的另一个你，究竟是什么样子？</p>
+    <div class="code-box">
+      <label class="code-label" for="code-input">请输入测试码</label>
+      <input id="code-input" type="text" maxlength="16" autocomplete="off" spellcheck="false" placeholder="如 SP-XXXX-XXXX">
+      <p class="code-hint" id="code-hint">每个测试码可测试 2 次 · 测试码请向购买渠道获取</p>
+      <p class="code-error" id="code-error"></p>
+    </div>
+    <div class="cover-cta">
+      <button class="btn btn-primary btn-block" data-action="start" id="btn-start" disabled>开始测试</button>
+    </div>
+    <p class="disclaimer" id="cover-foot">本测试纯属娱乐 · 结果仅供参考</p>
+  </section>
+
+  <!-- ═══ 视图：答题 ═══ -->
+  <section id="view-quiz" class="view quiz is-hidden" aria-label="答题">
+    <div class="quiz-top">
+      <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+      <span class="q-count" id="q-count">第 1 / 12 题</span>
+    </div>
+    <div class="card q-card">
+      <div class="q-no" id="q-no">QUESTION 01</div>
+      <h2 class="q-text" id="q-text"></h2>
+      <div class="options" id="options"></div>
+    </div>
+    <div class="quiz-nav">
+      <button class="btn btn-ghost" data-action="prev" id="btn-prev">上一题</button>
+      <button class="btn btn-primary" data-action="next" id="btn-next" disabled>下一题</button>
+    </div>
+  </section>
+
+  <!-- ═══ 视图：结果 ═══ -->
+  <section id="view-result" class="view result is-hidden" aria-label="测试结果">
+    <div class="result-head">
+      <div class="eyebrow">YOUR SECOND PERSONALITY</div>
+      <div class="shared-banner is-hidden" id="shared-banner">朋友分享给你的测试结果</div>
+      <h1 class="result-name" id="r-name"></h1>
+      <p class="result-tagline" id="r-tagline"></p>
+    </div>
+    <div class="card result-card type-bars">
+      <div class="block-title">你的暗面构成</div>
+      <div id="r-bars"></div>
+      <p class="shadow-line" id="r-shadow"></p>
+    </div>
+    <div class="card result-card">
+      <div class="block-title">关于你的第二人格</div>
+      <ul class="desc-list" id="r-desc"></ul>
+    </div>
+    <div class="card result-card">
+      <div class="block-title">你的性格底色</div>
+      <p class="why-text" id="r-why"></p>
+    </div>
+    <div class="card result-card">
+      <div class="block-title">高光时刻 · 情绪雷区</div>
+      <div class="two-col">
+        <div class="mini"><div class="mini-h">高光时刻</div><ul class="dot-list" id="r-highs"></ul></div>
+        <div class="mini"><div class="mini-h">情绪雷区</div><ul class="dot-list mine" id="r-mines"></ul></div>
+      </div>
+    </div>
+    <div class="card result-card">
+      <div class="block-title">关键词</div>
+      <div class="tags" id="r-tags"></div>
+    </div>
+    <div class="card result-card">
+      <div class="block-title">相处指南</div>
+      <div class="tips" id="r-tips"></div>
+    </div>
+    <div class="card result-card cp-card">
+      <div class="cp-line" id="r-cp"></div>
+    </div>
+    <div class="quote">
+      <div class="q-mark">“</div>
+      <p id="r-quote"></p>
+      <div class="q-src" id="r-quote-src">— 来自你的第二人格</div>
+    </div>
+    <div class="result-actions">
+      <button class="btn btn-primary" data-action="save">保存结果长图</button>
+      <button class="btn btn-ghost" data-action="copy">复制结果链接</button>
+      <button class="btn btn-ghost" data-action="restart">重新测试</button>
+    </div>
+    <p class="share-tip">把长图或链接发给朋友，看看 ta 的第二人格是什么</p>
+    <p class="foot-note" id="result-foot">本测试纯属娱乐 · 结果仅供参考</p>
+  </section>
+
+</div>
+
+<!-- ═══ 保存长图弹层 ═══ -->
+<div id="overlay" class="overlay is-hidden" role="dialog" aria-label="保存结果长图">
+  <div class="overlay-box">
+    <div class="overlay-title">你的结果长图</div>
+    <img id="save-img" alt="测试结果长图">
+    <p class="overlay-hint" id="save-hint">长按图片可保存到手机相册</p>
+    <div class="overlay-actions">
+      <button class="btn btn-ghost" data-action="overlay-close">关闭</button>
+      <a class="btn btn-primary" id="dl-link" download="我的第二人格-结果.png">下载图片</a>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast" role="status"></div>
+
+<script>
+/* ════════════════════════════════════════════════════════════
+   买家修改指南（只看这里就够了）
+   1. 品牌名 / LOGO 占位：改 brandName / logoText。
+   2. 大标题：改 title（l1 是你的 / l2 是主词 / l3 是结尾）。
+   3. 副标题、引导语、按钮文案：改 subtitle / intro / 各 *Text。
+   4. 测试码：由 Supabase 云端管理（数据库只存哈希，不存明文）。
+      本文件不再内置码池；新码请在管理后台（admin.html）一键生成。
+      这里只需填 Supabase 项目 URL 与 anon key。
+   5. 题目和选项：改 questions 数组；结果内容：改 results 数组。
+   6. 配色：改 primary / hot / bg / ink / sub。
+   7. 次数上限：每码 2 次，由数据库 codes 表的 max_uses 字段控制（服务端原子扣减）。
+   8. 改完保存，双击打开就是成品。
+   ════════════════════════════════════════════════════════════ */
+const CONFIG = {
+  brandName: "你的品牌名",
+  logoText: "LOGO",
+
+  title: { l1: "你的", l2: "第二人格", l3: "是什么？", hl: "第二人格" },
+  subtitle: "十二道题，照见你白天与深夜不同的那一面。",
+  intro: "白天得体周到，深夜却藏着一点陌生、一点锋利、一点不肯妥协。那个住在你身体里的另一个你，究竟是什么样子？",
+  startText: "开始测试",
+  codePlaceholder: "如 SP-XXXX-XXXX",
+  codeHint: "每个测试码可测试 2 次 · 测试码请向购买渠道获取",
+  codeInvalid: "测试码无效，请检查后重试",
+  codeUsed: "该测试码已用完，请使用新码",
+  nextText: "下一题",
+  lastText: "查看我的第二人格",
+  prevText: "上一题",
+  restartText: "重新测试",
+  saveText: "保存结果长图",
+  copyText: "复制结果链接",
+  footerText: "本测试纯属娱乐 · 结果仅供参考",
+
+  /* 配色：可自由修改 */
+  primary: "#6B5BD3",
+  hot: "#E0506B",
+  bg: "#F4F0E8",
+  ink: "#221F33",
+  sub: "#8B8698",
+
+  /* Supabase 后端接入：填项目 URL 与 anon key（Settings → API → Project URL / anon public key） */
+  supabase: {
+    url: "https://udyluqxfizxjtqkohava.supabase.co",
+    anonKey: "sb_publishable_wccfEO4BPB6cxEufxYbNiQ_pI6jWfaG"
+  },
+
+  /* 题目：k 为选项序号，A/B/C/D 分别对应 results 的第 1/2/3/4 种结果 */
+  questions: [
+    { q: "深夜两点，你还没睡。此刻的你最像——",
+      opts: [
+        { k: "A", text: "一台高速运转的处理器，脑子停不下来" },
+        { k: "B", text: "一部老电影的主角，情绪在缓慢回放" },
+        { k: "C", text: "一只来回踱步的猫，很想冲出门去" },
+        { k: "D", text: "一座安静的孤岛，享受这种空旷" }
+      ] },
+    { q: "朋友临时放你鸽子，你的第一反应是——",
+      opts: [
+        { k: "A", text: "无所谓，正好把计划里的其他事做完" },
+        { k: "B", text: "有点失落，但会替对方想好理由" },
+        { k: "C", text: "那下次我也不去了，凭什么" },
+        { k: "D", text: "以后这种约，默认自己一个人去" }
+      ] },
+    { q: "你最听不得的一句话是——",
+      opts: [
+        { k: "A", text: "“差不多就行了”" },
+        { k: "B", text: "“你又想太多了”" },
+        { k: "C", text: "“这不合适，别这么干”" },
+        { k: "D", text: "“你怎么总是不合群”" }
+      ] },
+    { q: "明天有一场重要的展示，你会——",
+      opts: [
+        { k: "A", text: "反复演练到每个细节都确定" },
+        { k: "B", text: "前一晚翻来覆去，上台却意外松弛" },
+        { k: "C", text: "临场发挥，即兴才是我的主场" },
+        { k: "D", text: "一个人安静准备，拒绝一切临时邀约" }
+      ] },
+    { q: "看到明显不公平时，你——",
+      opts: [
+        { k: "A", text: "记下来，找机会用规则解决" },
+        { k: "B", text: "心里难受很久，偷偷帮弱者" },
+        { k: "C", text: "当场开口，忍不了一点" },
+        { k: "D", text: "默默观察，看谁会先出手" }
+      ] },
+    { q: "你理想的假期是——",
+      opts: [
+        { k: "A", text: "行程排得明明白白，连吃饭都有计划" },
+        { k: "B", text: "和重要的人宅在一起，慢慢过" },
+        { k: "C", text: "临时起意，说走就走" },
+        { k: "D", text: "人少的地方，最好谁都找不到我" }
+      ] },
+    { q: "你的手机相册里大多是——",
+      opts: [
+        { k: "A", text: "截图：灵感、清单、各种备忘" },
+        { k: "B", text: "朋友、家人、猫猫狗狗" },
+        { k: "C", text: "走过的风景、吃过的店、离谱的瞬间" },
+        { k: "D", text: "很少拍照，拍了也多是风景和细节" }
+      ] },
+    { q: "被人误解的时候，你通常——",
+      opts: [
+        { k: "A", text: "懒得解释，用结果说话" },
+        { k: "B", text: "会难过，但只跟最亲的人说" },
+        { k: "C", text: "当场解释，越说越激动" },
+        { k: "D", text: "随它去，懂的人不用解释" }
+      ] },
+    { q: "你买东西最看重——",
+      opts: [
+        { k: "A", text: "参数和口碑，做足功课才下手" },
+        { k: "B", text: "有没有戳中我的心" },
+        { k: "C", text: "够不够特别、够不够有趣" },
+        { k: "D", text: "不被打扰，最好连售后都不用联系" }
+      ] },
+    { q: "朋友向你倾诉烦恼，你——",
+      opts: [
+        { k: "A", text: "直接给方案，解决问题优先" },
+        { k: "B", text: "先共情，把 ta 的情绪稳稳接住" },
+        { k: "C", text: "带 ta 去吃顿好的，用行动治愈" },
+        { k: "D", text: "安静听完，给一句精准的话" }
+      ] },
+    { q: "你心里住着的那只动物，最接近——",
+      opts: [
+        { k: "A", text: "狼：目标明确，耐得住孤独" },
+        { k: "B", text: "猫：柔软，但有自己的底线" },
+        { k: "C", text: "鹰：视野高远，说飞就飞" },
+        { k: "D", text: "鲸：庞大而安静，独自深潜" }
+      ] },
+    { q: "一句话总结你的深夜人格——",
+      opts: [
+        { k: "A", text: "“我可以做得更好。”" },
+        { k: "B", text: "“我在意的人，都要好好的。”" },
+        { k: "C", text: "“这世界，总要疯一次才不亏。”" },
+        { k: "D", text: "“我不需要被所有人喜欢。”" }
+      ] }
+  ],
+
+  /* 四种结果：顺序与选项 A/B/C/D 对应 */
+  results: [
+    {
+      name: "白昼完美演员",
+      tagline: "在人前永远得体可靠，把情绪管理到分毫不差。",
+      portrait: [
+        "你的第二人格，是那个“永远不失控”的掌控者。日程表是你的镇定剂，计划被完成的那一刻，你的世界才安静下来。",
+        "你不是没有情绪，而是把情绪排进了日程——先解决，再消化。深夜的 emo 在你这里属于“待办事项”，处理完就归档。",
+        "别人眼中的你：靠谱、滴水不漏。只有你知道，那份滴水不漏，是用多少个“再检查一遍”换来的。"
+      ],
+      why: "你的性格底色是“责任”和“掌控”。你从小就被“做完、做好”的信念塑造，习惯把主动权握在自己手里。对你来说，失控比失败更可怕——失败可以复盘，失控没有抓手。",
+      highs: [
+        "越是混乱的场合你越清醒，天然是团队的主心骨",
+        "立过的 flag 基本都能实现，说到做到是你的基本盘"
+      ],
+      mines: [
+        "有人打乱你的计划，你会表面微笑、内心爆炸",
+        "对自己太苛刻，完成了 99 分还盯着扣掉的那 1 分"
+      ],
+      tags: ["自律", "高要求", "情绪管理大师", "目标感", "细节控", "说到做到"],
+      tips: [
+        { h: "给身边的人", p: "ta 不需要安慰，需要你认真对待 ta 的每一个承诺；临时改约请提前说。" },
+        { h: "给 ta 自己", p: "偶尔允许“差不多”发生，世界不会塌，你也值得休息。" }
+      ],
+      cp: "逆风点火者",
+      cpDesc: "和 ta 最有火花——ta 负责打破规矩，你负责把局面稳稳接住，一收一放刚刚好。",
+      quote: "白天我把生活过成作品，深夜才允许自己问一句：累吗？—— 不累，但可以更好。"
+    },
+    {
+      name: "深水守密者",
+      tagline: "表面风平浪静，心里早已暗流汹涌。",
+      portrait: [
+        "你的第二人格，是那个“想太多”的守密者。别人一句无心的话，你能在心里演完一整部电影，还顺手把结局也编了。",
+        "你习惯先照顾所有人的情绪，自己的委屈却从不声张。群里没人接话你会尴尬，朋友难过你会比 ta 更难过。",
+        "你不是没有脾气，只是脾气都朝着自己——“算了，ta 也不容易。”这句话是你的口头禅，也是你的内耗来源。"
+      ],
+      why: "你的性格底色是“共情”和“温柔”。你太擅长看见别人的需要，却很少练习看见自己的。你怕麻烦别人，宁可自己多扛一点——这份懂事，让人心疼。",
+      highs: [
+        "朋友公认的“情绪树洞”，和你说话从不担心被评判",
+        "直觉敏锐，总能第一时间察觉气氛和人心变化"
+      ],
+      mines: [
+        "委屈攒着不说，攒到某天突然爆发或悄悄远离",
+        "把“被需要”当成安全感，容易为不值得的人消耗自己"
+      ],
+      tags: ["共情", "细腻", "温柔", "内耗", "树洞体质", "替人着想"],
+      tips: [
+        { h: "给身边的人", p: "多主动问 ta 一句“你呢”，ta 会记很久；ta 说没事的时候，往往最有事。" },
+        { h: "给 ta 自己", p: "你的感受也值得被优先对待，说出口的委屈，才是真的爱自己。" }
+      ],
+      cp: "午夜清醒者",
+      cpDesc: "和 ta 意外合拍——一个愿意倾诉，一个擅长接住，安静里全是懂得。",
+      quote: "我把温柔都给了世界，把深水留给自己。其实我也在等一个人，问一句：那你呢？"
+    },
+    {
+      name: "逆风点火者",
+      tagline: "平时安安静静，易燃易炸，一点就着。",
+      portrait: [
+        "你的第二人格，是那个“说走就走”的反叛者。规矩在你眼里不是用来遵守的，是用来评估要不要破的。",
+        "你对无聊的耐受度极低：排队超过十分钟就想换方案，“计划赶不上变化”才是你的舒适区。",
+        "你藏得最好的不是脾气，是野心——那句“凭什么不行”，你只对自己说，说完就去干了。"
+      ],
+      why: "你的性格底色是“自由”和“好奇心”。你天生反感被定义，越是“你应该”，你越想问“凭什么”。你不是故意唱反调，你只是拒绝一个没有选择的人生。",
+      highs: [
+        "说干就干的行动力，很多人想了一年的生活，你已经活了一年",
+        "气氛担当，有你在的场合永远不会冷场"
+      ],
+      mines: [
+        "上头的时候说话不过脑子，事后又暗自后悔",
+        "三分钟热度，兴趣来得快去得也快"
+      ],
+      tags: ["行动派", "反叛", "好奇心", "直球", "气氛担当", "火花"],
+      tips: [
+        { h: "给身边的人", p: "ta 说不去的时候，其实在等你拉一把；别和 ta 硬碰硬，给个台阶就下。" },
+        { h: "给 ta 自己", p: "冲动之前数三秒，你要的不是麻烦，是尽兴——这两件事可以兼得。" }
+      ],
+      cp: "白昼完美演员",
+      cpDesc: "和 ta 最有火花——ta 负责规划，你负责让它精彩，一个收一个放。",
+      quote: "这世界我来都来了，总要疯一次。白天我守规矩，夜里我想把规矩点着，看它烧成烟花。"
+    },
+    {
+      name: "午夜清醒者",
+      tagline: "越热闹越安静，习惯和所有人保持一步距离。",
+      portrait: [
+        "你的第二人格，是那个“看得太清楚”的观察者。热闹是大家的，你站在旁边微笑的那一个——不是不合群，是不想演。",
+        "你对关系的标准很高：宁缺毋滥，宁可独处，也不愿将就一段消耗你的关系。",
+        "独处不是孤独，是你的充电方式。没人找得到你的时候，你反而最完整。"
+      ],
+      why: "你的性格底色是“清醒”和“边界感”。你早早看懂了人情世故的剧本，却懒得参演。你不是冷漠，你只是把有限的热情，留给值得的人。",
+      highs: [
+        "判断力一流，几乎不会在重要选择上栽跟头",
+        "情绪稳定，是朋友眼中的“定海神针”"
+      ],
+      mines: [
+        "习惯性拒绝帮助，什么都自己扛，扛不住了也不说",
+        "边界感太强，容易把真心的人挡在门外"
+      ],
+      tags: ["清醒", "边界感", "独立", "洞察力", "情绪稳定", "宁缺毋滥"],
+      tips: [
+        { h: "给身边的人", p: "别逼 ta“合群”，尊重 ta 的安静，就是最好的陪伴；ta 主动找你，是把你放在很里面。" },
+        { h: "给 ta 自己", p: "偶尔主动一次，世界不会因此侵入你的边界——反而会还你惊喜。" }
+      ],
+      cp: "深水守密者",
+      cpDesc: "和 ta 意外合拍——一个安静倾诉，一个安静接住，两个人都懂“陪伴不必喧哗”。",
+      quote: "我不是不合群，只是我的热闹都在深海里。白天我陪世界演戏，夜里我陪自己清醒。"
+    }
+  ]
+};
+/* ════════════════════════════════════════════════════════════
+   以下是运行逻辑，一般不需要修改
+   ════════════════════════════════════════════════════════════ */
+(function () {
+  "use strict";
+
+  /* ---------- 应用买家配色与文案 ---------- */
+  var st = document.documentElement.style;
+  st.setProperty("--accent", CONFIG.primary);
+  st.setProperty("--hot", CONFIG.hot);
+  st.setProperty("--bg", CONFIG.bg);
+  st.setProperty("--ink", CONFIG.ink);
+  st.setProperty("--sub", CONFIG.sub);
+
+  document.getElementById("brand-text").textContent = CONFIG.logoText + "｜" + CONFIG.brandName;
+  document.getElementById("cover-hl").textContent = CONFIG.title.hl;
+  document.getElementById("cover-sub").textContent = CONFIG.subtitle;
+  document.getElementById("cover-intro").textContent = CONFIG.intro;
+  document.getElementById("code-input").placeholder = CONFIG.codePlaceholder;
+  document.getElementById("code-hint").textContent = CONFIG.codeHint;
+  document.getElementById("cover-foot").textContent = CONFIG.footerText;
+  document.getElementById("result-foot").textContent = CONFIG.footerText;
+
+  /* ---------- SHA-256（纯 JS，离线可用） ---------- */
+  function sha256(ascii) {
+    function rightRotate(value, amount) {
+      return (value >>> amount) | (value << (32 - amount));
+    }
+    var mathPow = Math.pow;
+    var maxWord = mathPow(2, 32);
+    var lengthProperty = "length";
+    var i, j;
+    var result = "";
+
+    var words = [];
+    var asciiBitLength = ascii[lengthProperty] * 8;
+
+    var hash = sha256.h = sha256.h || [];
+    var k = sha256.k = sha256.k || [];
+    var primeCounter = k[lengthProperty];
+
+    var isComposite = {};
+    for (var candidate = 2; primeCounter < 64; candidate++) {
+      if (!isComposite[candidate]) {
+        for (i = 0; i < 313; i += candidate) { isComposite[i] = candidate; }
+        hash[primeCounter] = (mathPow(candidate, .5) * maxWord) | 0;
+        k[primeCounter++] = (mathPow(candidate, 1 / 3) * maxWord) | 0;
+      }
+    }
+
+    ascii += "\x80";
+    while (ascii[lengthProperty] % 64 - 56) { ascii += "\x00"; }
+    for (i = 0; i < ascii[lengthProperty]; i++) {
+      j = ascii.charCodeAt(i);
+      if (j >> 8) { return ""; }
+      words[i >> 2] |= j << ((3 - i) % 4) * 8;
+    }
+    words[words[lengthProperty]] = ((asciiBitLength / maxWord) | 0);
+    words[words[lengthProperty]] = (asciiBitLength);
+
+    for (j = 0; j < words[lengthProperty];) {
+      var w = words.slice(j, j += 16);
+      var oldHash = hash;
+      hash = hash.slice(0, 8);
+
+      for (i = 0; i < 64; i++) {
+        var w15 = w[i - 15], w2 = w[i - 2];
+        var a = hash[0], e = hash[4];
+        var temp1 = hash[7]
+          + (rightRotate(e, 6) ^ rightRotate(e, 11) ^ rightRotate(e, 25))
+          + ((e & hash[5]) ^ ((~e) & hash[6]))
+          + k[i]
+          + (w[i] = (i < 16) ? w[i] : (
+              w[i - 16]
+              + (rightRotate(w15, 7) ^ rightRotate(w15, 18) ^ (w15 >>> 3))
+              + w[i - 7]
+              + (rightRotate(w2, 17) ^ rightRotate(w2, 19) ^ (w2 >>> 10))
+            ) | 0
+          );
+        var temp2 = (rightRotate(a, 2) ^ rightRotate(a, 13) ^ rightRotate(a, 22))
+          + ((a & hash[1]) ^ (a & hash[2]) ^ (hash[1] & hash[2]));
+
+        hash = [(temp1 + temp2) | 0].concat(hash);
+        hash[4] = (hash[4] + temp1) | 0;
+      }
+
+      for (i = 0; i < 8; i++) {
+        hash[i] = (hash[i] + oldHash[i]) | 0;
+      }
+    }
+
+    for (i = 0; i < 8; i++) {
+      for (j = 3; j + 1; j--) {
+        var b = (hash[i] >> (j * 8)) & 255;
+        result += ((b < 16) ? 0 : "") + b.toString(16);
+      }
+    }
+    return result;
+  }
+
+  /* ---------- Supabase 后端接入（RPC 调用） ---------- */
+  function supabaseRpc(fn, params) {
+    return fetch(CONFIG.supabase.url + "/rest/v1/rpc/" + fn, {
+      method: "POST",
+      headers: {
+        "apikey": CONFIG.supabase.anonKey,
+        "Authorization": "Bearer " + CONFIG.supabase.anonKey,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(params || {})
+    }).then(function (res) {
+      if (!res.ok) { throw new Error("rpc-" + fn); }
+      return res.json();
+    });
+  }
+
+  /* ---------- 分享链接编解码（结果数据只含序号，纯 ASCII） ---------- */
+  function b64e(str) {
+    return btoa(str).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  }
+  function b64d(str) {
+    str = str.replace(/-/g, "+").replace(/_/g, "/");
+    while (str.length % 4) { str += "="; }
+    return atob(str);
+  }
+  function buildShareUrl(scores) {
+    var base = location.href.split("#")[0];
+    var payload = b64e(JSON.stringify({ t: argmax(scores), s: scores }));
+    return base + "#r=" + payload;
+  }
+  function parseShareUrl() {
+    try {
+      var h = location.hash;
+      if (h.indexOf("#r=") !== 0) { return null; }
+      var obj = JSON.parse(b64d(h.slice(3)));
+      if (typeof obj.t !== "number" || !Array.isArray(obj.s) || obj.s.length !== CONFIG.results.length) { return null; }
+      var bad = false;
+      for (var i = 0; i < obj.s.length; i++) { if (typeof obj.s[i] !== "number") { bad = true; } }
+      if (bad) { return null; }
+      return { main: obj.t, scores: obj.s };
+    } catch (e) { return null; }
+  }
+
+  /* ---------- 状态 ---------- */
+  var N = CONFIG.questions.length;
+  var state = { i: 0, picked: [], codeHash: null, scores: null };
+
+  /* ---------- Toast ---------- */
+  var toastEl = document.getElementById("toast");
+  var toastTimer = null;
+  function toast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add("on");
+    if (toastTimer) { clearTimeout(toastTimer); }
+    toastTimer = setTimeout(function () { toastEl.classList.remove("on"); }, 2600);
+  }
+
+  /* ---------- 视图切换 ---------- */
+  function show(id) {
+    var views = document.querySelectorAll(".view");
+    for (var v = 0; v < views.length; v++) { views[v].classList.add("is-hidden"); }
+    document.getElementById(id).classList.remove("is-hidden");
+    window.scrollTo(0, 0);
+  }
+
+  /* ---------- 测试码门禁（服务端校验，每码限 2 次） ---------- */
+  function tryStart() {
+    var input = document.getElementById("code-input");
+    var errEl = document.getElementById("code-error");
+    var code = input.value.trim().toUpperCase();
+    if (!code) { errEl.textContent = CONFIG.codeInvalid; return; }
+    var hash = sha256(code);
+    errEl.textContent = "校验中…";
+    supabaseRpc("validate_code", { p_hash: hash }).then(function (r) {
+      if (r && r.valid) {
+        errEl.textContent = "";
+        state.codeHash = hash;
+        state.i = 0;
+        state.picked = [];
+        state.scores = null;
+        show("view-quiz");
+        renderQuiz();
+      } else {
+        var reason = (r && r.reason) || "invalid";
+        errEl.textContent = (reason === "used_up") ? CONFIG.codeUsed : CONFIG.codeInvalid;
+      }
+    }).catch(function () {
+      errEl.textContent = "网络异常，请稍后重试";
+    });
+  }
+
+  /* ---------- 答题 ---------- */
+  function renderQuiz() {
+    var q = CONFIG.questions[state.i];
+    document.getElementById("q-no").textContent = "QUESTION " + String(state.i + 1).padStart(2, "0");
+    document.getElementById("q-text").textContent = q.q;
+    document.getElementById("q-count").textContent = "第 " + (state.i + 1) + " / " + N + " 题";
+    document.getElementById("progress-fill").style.width = ((state.i + 1) / N * 100) + "%";
+
+    var box = document.getElementById("options");
+    box.innerHTML = "";
+    for (var o = 0; o < q.opts.length; o++) {
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "option";
+      btn.setAttribute("data-val", String(o));
+      btn.setAttribute("aria-pressed", "false");
+      var key = document.createElement("span");
+      key.className = "key";
+      key.textContent = q.opts[o].k;
+      var txt = document.createElement("span");
+      txt.textContent = q.opts[o].text;
+      btn.appendChild(key);
+      btn.appendChild(txt);
+      btn.addEventListener("click", function () { pick(Number(this.getAttribute("data-val"))); });
+      box.appendChild(btn);
+    }
+    if (typeof state.picked[state.i] !== "undefined") {
+      var prevSel = box.children[state.picked[state.i]];
+      prevSel.classList.add("is-on");
+      prevSel.setAttribute("aria-pressed", "true");
+    }
+    var nextBtn = document.getElementById("btn-next");
+    nextBtn.textContent = (state.i === N - 1) ? CONFIG.lastText : CONFIG.nextText;
+    nextBtn.disabled = (typeof state.picked[state.i] === "undefined");
+    document.getElementById("btn-prev").style.visibility = (state.i === 0) ? "hidden" : "visible";
+  }
+
+  function pick(idx) {
+    state.picked[state.i] = idx;
+    var box = document.getElementById("options");
+    var opts = box.children;
+    for (var o = 0; o < opts.length; o++) {
+      opts[o].classList.remove("is-on");
+      opts[o].setAttribute("aria-pressed", "false");
+    }
+    opts[idx].classList.add("is-on");
+    opts[idx].setAttribute("aria-pressed", "true");
+    document.getElementById("btn-next").disabled = false;
+  }
+
+  function next() {
+    if (typeof state.picked[state.i] === "undefined") { return; }
+    state.i += 1;
+    if (state.i >= N) {
+      var scores = compute();
+      state.scores = scores;
+      if (state.codeHash) {
+        var btn = document.getElementById("btn-next");
+        btn.disabled = true;
+        supabaseRpc("consume_code", { p_hash: state.codeHash, p_result: argmax(scores) }).then(function (r) {
+          if (r && r.ok) { renderResult(scores, false); }
+          else { toast(CONFIG.codeUsed); restart(); }
+        }).catch(function () {
+          toast("网络异常，结果未能保存，请重试");
+          state.i = N - 1;
+          btn.disabled = false;
+        });
+      } else {
+        renderResult(scores, false);
+      }
+    } else {
+      renderQuiz();
+    }
+  }
+
+  function prev() {
+    if (state.i === 0) { return; }
+    state.i -= 1;
+    renderQuiz();
+  }
+
+  /* ---------- 计分与结果 ---------- */
+  function compute() {
+    var scores = [];
+    for (var t = 0; t < CONFIG.results.length; t++) { scores.push(0); }
+    for (var i = 0; i < N; i++) {
+      if (typeof state.picked[i] !== "undefined") { scores[state.picked[i]] += 1; }
+    }
+    return scores;
+  }
+  function argmax(scores) {
+    var best = 0;
+    for (var t = 1; t < scores.length; t++) { if (scores[t] > scores[best]) { best = t; } }
+    return best;
+  }
+  function rankTypes(scores) {
+    var idxs = [];
+    for (var t = 0; t < scores.length; t++) { idxs.push(t); }
+    idxs.sort(function (a, b) { return scores[b] - scores[a]; });
+    return idxs;
+  }
+
+  function renderResult(scores, shared) {
+    var main = argmax(scores);
+    var order = rankTypes(scores);
+    var second = order[1];
+    var data = CONFIG.results[main];
+
+    document.getElementById("shared-banner").classList.toggle("is-hidden", !shared);
+
+    document.getElementById("r-name").textContent = data.name;
+    document.getElementById("r-tagline").textContent = data.tagline;
+
+    var descBox = document.getElementById("r-desc");
+    descBox.innerHTML = "";
+    data.portrait.forEach(function (line) {
+      var li = document.createElement("li");
+      li.textContent = line;
+      descBox.appendChild(li);
+    });
+
+    document.getElementById("r-why").textContent = data.why;
+
+    var highsBox = document.getElementById("r-highs");
+    highsBox.innerHTML = "";
+    data.highs.forEach(function (t) {
+      var li = document.createElement("li");
+      li.textContent = t;
+      highsBox.appendChild(li);
+    });
+    var minesBox = document.getElementById("r-mines");
+    minesBox.innerHTML = "";
+    data.mines.forEach(function (t) {
+      var li = document.createElement("li");
+      li.textContent = t;
+      minesBox.appendChild(li);
+    });
+
+    var tagBox = document.getElementById("r-tags");
+    tagBox.innerHTML = "";
+    data.tags.forEach(function (t) {
+      var span = document.createElement("span");
+      span.className = "tag";
+      span.textContent = t;
+      tagBox.appendChild(span);
+    });
+
+    var tipsBox = document.getElementById("r-tips");
+    tipsBox.innerHTML = "";
+    data.tips.forEach(function (tip) {
+      var div = document.createElement("div");
+      div.className = "tip";
+      var b = document.createElement("b");
+      b.textContent = tip.h;
+      var p = document.createElement("p");
+      p.textContent = tip.p;
+      div.appendChild(b);
+      div.appendChild(p);
+      tipsBox.appendChild(div);
+    });
+
+    document.getElementById("r-cp").innerHTML =
+      "最适合和你组队的人格是 <b class=\"cp-name\">「" + data.cp + "」</b> —— " + data.cpDesc;
+    document.getElementById("r-quote").textContent = data.quote;
+    document.getElementById("r-quote-src").textContent = "— 来自「" + data.name + "」的第二人格";
+
+    var barsBox = document.getElementById("r-bars");
+    barsBox.innerHTML = "";
+    [main, second].forEach(function (typeIdx, pos) {
+      var pct = Math.round(scores[typeIdx] / N * 100);
+      var row = document.createElement("div");
+      row.className = "bar-row";
+      var lbl = document.createElement("span");
+      lbl.className = "lbl";
+      lbl.textContent = CONFIG.results[typeIdx].name;
+      var track = document.createElement("span");
+      track.className = "bar-track";
+      var fill = document.createElement("span");
+      fill.className = "bar-fill";
+      fill.setAttribute("data-w", pct + "%");
+      var pctEl = document.createElement("span");
+      pctEl.className = "pct";
+      pctEl.textContent = pct + "%";
+      track.appendChild(fill);
+      row.appendChild(lbl);
+      row.appendChild(track);
+      row.appendChild(pctEl);
+      barsBox.appendChild(row);
+    });
+    var others = order.slice(2);
+    document.getElementById("r-shadow").textContent =
+      "你的暗面里，还有「" + CONFIG.results[others[0]].name + "」「" + CONFIG.results[others[1]].name + "」的影子。";
+
+    show("view-result");
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        var fills = document.querySelectorAll(".bar-fill");
+        for (var f = 0; f < fills.length; f++) { fills[f].style.width = fills[f].getAttribute("data-w"); }
+      });
+    });
+  }
+
+  function restart() {
+    state = { i: 0, picked: [], codeHash: null, scores: null };
+    document.getElementById("code-input").value = "";
+    document.getElementById("code-error").textContent = "";
+    show("view-cover");
+  }
+
+  /* ---------- 结果长图（Canvas 绘制，无需依赖） ---------- */
+  var FONT = "'PingFang SC','Microsoft YaHei','HarmonyOS Sans SC',sans-serif";
+  function wrapText(ctx, text, maxWidth) {
+    var lines = [];
+    var raw = String(text).split("\n");
+    for (var r = 0; r < raw.length; r++) {
+      var line = "";
+      for (var i = 0; i < raw[r].length; i++) {
+        var test = line + raw[r][i];
+        if (ctx.measureText(test).width > maxWidth && line) {
+          lines.push(line);
+          line = raw[r][i];
+        } else {
+          line = test;
+        }
+      }
+      lines.push(line);
+    }
+    return lines;
+  }
+  function rr(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+
+  function makeLongImage(scores, cb) {
+    var W = 750;
+    var M = 46;
+    var maxW = W - M * 2;
+    var main = argmax(scores);
+    var order = rankTypes(scores);
+    var second = order[1];
+    var others = order.slice(2);
+    var data = CONFIG.results[main];
+    var accent = CONFIG.primary || "#6B5BD3";
+    var hot = CONFIG.hot || "#E0506B";
+    var ink = CONFIG.ink || "#221F33";
+    var sub = CONFIG.sub || "#8B8698";
+    var bg = CONFIG.bg || "#F4F0E8";
+    var soft = "#FAF7F0";
+    var line = "#E6E0D4";
+
+    var tmp = document.createElement("canvas");
+    tmp.width = W;
+    tmp.height = 4000;
+    var ctx = tmp.getContext("2d");
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, 4000);
+    ctx.textBaseline = "top";
+
+    var y = 52;
+
+    /* 头部：品牌 + 标题 */
+    ctx.fillStyle = ink;
+    ctx.font = "700 30px " + FONT;
+    ctx.textAlign = "center";
+    var title = "你的" + CONFIG.title.hl + "是什么？";
+    ctx.fillText(title, W / 2, y);
+    y += 46;
+    ctx.fillStyle = sub;
+    ctx.font = "500 15px " + FONT;
+    ctx.fillText("十二道题，照见你白天与深夜不同的那一面", W / 2, y);
+    y += 22;
+    ctx.fillStyle = sub;
+    ctx.font = "400 13px " + FONT;
+    ctx.fillText(CONFIG.brandName + " · 趣味心理测评", W / 2, y);
+    y += 20;
+    ctx.strokeStyle = line;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(M, y + 6);
+    ctx.lineTo(W - M, y + 6);
+    ctx.stroke();
+    y += 30;
+
+    /* 结果名 */
+    ctx.fillStyle = accent;
+    ctx.font = "800 50px " + FONT;
+    ctx.fillText(data.name, W / 2, y);
+    y += 66;
+    ctx.fillStyle = "#5A5568";
+    ctx.font = "500 19px " + FONT;
+    ctx.fillText(data.tagline, W / 2, y);
+    y += 44;
+
+    /* 暗面构成 */
+    ctx.textAlign = "left";
+    ctx.fillStyle = accent;
+    ctx.font = "600 16px " + FONT;
+    ctx.fillText("你的暗面构成", M, y);
+    y += 30;
+    [main, second].forEach(function (typeIdx) {
+      var pct = Math.round(scores[typeIdx] / N * 100);
+      ctx.fillStyle = ink;
+      ctx.font = "600 15px " + FONT;
+      ctx.fillText(CONFIG.results[typeIdx].name, M, y);
+      ctx.fillStyle = sub;
+      ctx.font = "500 15px " + FONT;
+      ctx.textAlign = "right";
+      ctx.fillText(pct + "%", W - M, y);
+      ctx.textAlign = "left";
+      y += 26;
+      ctx.fillStyle = "#EFEBE3";
+      rr(ctx, M, y, maxW, 12, 6);
+      ctx.fill();
+      var bw = Math.max(12, maxW * pct / 100);
+      var grad = ctx.createLinearGradient(M, 0, M + maxW, 0);
+      grad.addColorStop(0, accent);
+      grad.addColorStop(1, "#8E7CFF");
+      ctx.fillStyle = grad;
+      rr(ctx, M, y, bw, 12, 6);
+      ctx.fill();
+      y += 34;
+    });
+    ctx.fillStyle = sub;
+    ctx.font = "400 14px " + FONT;
+    ctx.fillText("你的暗面里，还有「" + CONFIG.results[others[0]].name + "」「" + CONFIG.results[others[1]].name + "」的影子。", M, y);
+    y += 46;
+
+    function sectionTitle(label) {
+      ctx.fillStyle = accent;
+      ctx.font = "600 16px " + FONT;
+      ctx.fillText(label, M, y);
+      y += 30;
+    }
+    function para(text) {
+      ctx.fillStyle = "#423D55";
+      ctx.font = "400 19px " + FONT;
+      var lines = wrapText(ctx, text, maxW);
+      for (var i = 0; i < lines.length; i++) {
+        ctx.fillText(lines[i], M, y);
+        y += 32;
+      }
+      y += 18;
+    }
+    function bullets(items, dotColor) {
+      ctx.fillStyle = "#5A5568";
+      ctx.font = "400 18px " + FONT;
+      for (var b = 0; b < items.length; b++) {
+        ctx.fillStyle = dotColor;
+        ctx.beginPath();
+        ctx.arc(M + 7, y + 9, 5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#5A5568";
+        var lines = wrapText(ctx, items[b], maxW - 26);
+        var first = true;
+        for (var i = 0; i < lines.length; i++) {
+          ctx.fillText(lines[i], first ? M + 22 : M, y);
+          y += 30;
+          first = false;
+        }
+      }
+      y += 16;
+    }
+    function tags() {
+      ctx.font = "500 15px " + FONT;
+      var x = M;
+      for (var t = 0; t < data.tags.length; t++) {
+        var tw = ctx.measureText(data.tags[t]).width + 28;
+        if (x + tw > W - M) { x = M; y += 38; }
+        ctx.fillStyle = "#F1EEFB";
+        rr(ctx, x, y, tw, 30, 15);
+        ctx.fill();
+        ctx.fillStyle = "#4A3FA8";
+        ctx.textAlign = "center";
+        ctx.fillText(data.tags[t], x + tw / 2, y + 7);
+        ctx.textAlign = "left";
+        x += tw + 10;
+      }
+      y += 48;
+    }
+    function tipBlock(header, body) {
+      ctx.fillStyle = "#5A5568";
+      ctx.font = "400 17px " + FONT;
+      var lines = wrapText(ctx, body, maxW - 36);
+      var bh = 42 + lines.length * 28 + 16;
+      ctx.fillStyle = soft;
+      rr(ctx, M, y, maxW, bh, 16);
+      ctx.fill();
+      ctx.fillStyle = "#4A3FA8";
+      ctx.font = "600 15px " + FONT;
+      ctx.fillText(header, M + 18, y + 14);
+      ctx.fillStyle = "#5A5568";
+      ctx.font = "400 17px " + FONT;
+      var ty = y + 46;
+      for (var i = 0; i < lines.length; i++) {
+        ctx.fillText(lines[i], M + 18, ty);
+        ty += 28;
+      }
+      y = ty + 18;
+    }
+
+    sectionTitle("关于你的第二人格");
+    data.portrait.forEach(para);
+
+    sectionTitle("你的性格底色");
+    para(data.why);
+
+    sectionTitle("高光时刻");
+    bullets(data.highs, accent);
+    sectionTitle("情绪雷区");
+    bullets(data.mines, hot);
+
+    sectionTitle("关键词");
+    tags();
+
+    sectionTitle("相处指南");
+    data.tips.forEach(function (tip) { tipBlock(tip.h, tip.p); });
+
+    /* 人格 CP */
+    ctx.fillStyle = "#423D55";
+    ctx.font = "400 18px " + FONT;
+    var cpText = "最适合和你组队的人格是「" + data.cp + "」——" + data.cpDesc;
+    var cpLines = wrapText(ctx, cpText, maxW);
+    for (var ci = 0; ci < cpLines.length; ci++) {
+      ctx.fillText(cpLines[ci], M, y);
+      y += 30;
+    }
+    y += 24;
+
+    /* 独白 */
+    var qh = 150;
+    var grad2 = ctx.createLinearGradient(0, y, 0, y + qh);
+    grad2.addColorStop(0, accent);
+    grad2.addColorStop(1, "#7B6AE0");
+    ctx.fillStyle = grad2;
+    rr(ctx, M, y, maxW, qh, 22);
+    ctx.fill();
+    ctx.fillStyle = "#fff";
+    ctx.textAlign = "center";
+    ctx.font = "600 21px " + FONT;
+    var quoteLines = wrapText(ctx, data.quote, maxW - 40);
+    var qy = y + 34;
+    for (var qi = 0; qi < quoteLines.length; qi++) {
+      ctx.fillText(quoteLines[qi], W / 2, qy);
+      qy += 34;
+    }
+    ctx.font = "400 13px " + FONT;
+    ctx.fillStyle = "rgba(255,255,255,.8)";
+    ctx.fillText("— 来自「" + data.name + "」的第二人格", W / 2, qy + 10);
+    ctx.textAlign = "left";
+    y += qh + 44;
+
+    /* 页脚 */
+    ctx.strokeStyle = line;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(M, y);
+    ctx.lineTo(W - M, y);
+    ctx.stroke();
+    y += 28;
+    ctx.fillStyle = sub;
+    ctx.font = "400 13px " + FONT;
+    ctx.textAlign = "center";
+    ctx.fillText("本测试纯属娱乐 · 结果仅供参考", W / 2, y);
+    y += 22;
+    ctx.fillText("来自「你的" + CONFIG.title.hl + "」趣味测评 · " + CONFIG.brandName, W / 2, y);
+    y += 40;
+
+    /* 裁剪到实际高度 */
+    var final = document.createElement("canvas");
+    final.width = W;
+    final.height = y;
+    final.getContext("2d").drawImage(tmp, 0, 0);
+    final.toBlob(cb, "image/png");
+  }
+
+  /* ---------- 保存长图 ---------- */
+  var overlay = document.getElementById("overlay");
+  function openOverlay(url) {
+    document.getElementById("save-img").src = url;
+    document.getElementById("dl-link").href = url;
+    var isTouch = ("ontouchstart" in window) || (navigator.maxTouchPoints > 0);
+    document.getElementById("save-hint").textContent =
+      isTouch ? "长按图片可保存到手机相册" : "图片已生成，可点击下方按钮下载保存";
+    overlay.classList.remove("is-hidden");
+  }
+  function closeOverlay() { overlay.classList.add("is-hidden"); }
+
+  function saveResultImage() {
+    if (!state.scores) { return; }
+    toast("正在生成长图…");
+    makeLongImage(state.scores, function (blob) {
+      var url = URL.createObjectURL(blob);
+      var file = null;
+      try { file = new File([blob], "我的第二人格-结果.png", { type: "image/png" }); } catch (e) {}
+      var canShare = false;
+      try { canShare = !!(file && navigator.canShare && navigator.canShare({ files: [file] })); } catch (e) {}
+      if (canShare) {
+        navigator.share({
+          files: [file],
+          title: "我的第二人格测试结果",
+          text: "我测出了我的第二人格，你也来试试"
+        }).then(function () {
+          toast("长图已保存/分享");
+        }).catch(function () {
+          openOverlay(url);
+        });
+      } else {
+        openOverlay(url);
+        var isTouch = ("ontouchstart" in window) || (navigator.maxTouchPoints > 0);
+        if (!isTouch) {
+          var dl = document.getElementById("dl-link");
+          dl.click();
+          toast("长图已生成并开始下载");
+        }
+      }
+    });
+  }
+
+  /* ---------- 复制结果链接 ---------- */
+  function copyResultLink() {
+    if (!state.scores) { return; }
+    var url = buildShareUrl(state.scores);
+    var triedClipboard = false;
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        triedClipboard = true;
+        navigator.clipboard.writeText(url).then(
+          function () { toast("结果链接已复制，发给朋友即可查看"); },
+          function () { fallbackCopy(url); }
+        );
+      }
+    } catch (e) {}
+    if (!triedClipboard) { fallbackCopy(url); }
+  }
+  function fallbackCopy(url) {
+    var ok = false;
+    try {
+      var ta = document.createElement("textarea");
+      ta.value = url;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      ok = document.execCommand("copy");
+      document.body.removeChild(ta);
+    } catch (e) { ok = false; }
+    if (ok) {
+      toast("结果链接已复制，发给朋友即可查看");
+    } else {
+      window.prompt("复制这条链接发给朋友（他人打开即可看到你的结果）：", url);
+      toast("链接已给出，长按复制即可");
+    }
+  }
+
+  /* ---------- 事件绑定 ---------- */
+  var codeInput = document.getElementById("code-input");
+  var btnStart = document.getElementById("btn-start");
+  codeInput.addEventListener("input", function () {
+    document.getElementById("code-error").textContent = "";
+    btnStart.disabled = !codeInput.value.trim();
+  });
+  codeInput.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") { tryStart(); }
+  });
+  document.querySelector('[data-action="start"]').addEventListener("click", tryStart);
+  document.querySelector('[data-action="prev"]').addEventListener("click", prev);
+  document.querySelector('[data-action="next"]').addEventListener("click", next);
+  document.querySelector('[data-action="restart"]').addEventListener("click", restart);
+  document.querySelector('[data-action="save"]').addEventListener("click", saveResultImage);
+  document.querySelector('[data-action="copy"]').addEventListener("click", copyResultLink);
+  document.querySelector('[data-action="overlay-close"]').addEventListener("click", closeOverlay);
+
+  /* ---------- 启动：优先进入分享结果视图 ---------- */
+  var shared = parseShareUrl();
+  if (shared) {
+    state.scores = shared.scores;
+    renderResult(shared.scores, true);
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>第二人格测评 · 管理后台</title>
+<!--
+  ════════════════════════════════════════════════════════════
+  管理后台（密钥管理）
+  ─ 登录：使用你在 Supabase Authentication → Users 里创建的管理员账号
+    （邮箱 + 密码），并已执行 select public.grant_admin('你的UID')。
+  ─ 功能：码列表（用量/停用启用）、一键生成新码（明文只展示一次）、
+    测试记录查看、登出。
+  ─ 配置：下方 CONFIG.supabase 填项目 URL 与 anon key。
+  ════════════════════════════════════════════════════════════
+-->
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='12' cy='16' r='8' fill='%236B5BD3'/%3E%3Ccircle cx='20' cy='16' r='8' fill='%23E0506B' opacity='0.85'/%3E%3C/svg%3E">
+<style>
+:root{
+  --bg:#F4F0E8; --card:#FFFFFF; --ink:#221F33; --sub:#8B8698; --line:#E6E0D4;
+  --accent:#6B5BD3; --accent-soft:#F1EEFB; --hot:#E0506B; --ok:#3E8E6E; --warn:#B7791F;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:"PingFang SC","Microsoft YaHei",-apple-system,Segoe UI,sans-serif;min-height:100vh}
+.wrap{max-width:860px;margin:0 auto;padding:16px}
+.brand{display:flex;align-items:center;gap:10px;padding:18px 0 14px}
+.brand .logo{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--hot));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:16px;letter-spacing:1px}
+.brand h1{font-size:19px;font-weight:800}
+.brand .tag{font-size:12px;color:var(--sub);margin-top:2px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:16px}
+.card h2{font-size:15px;font-weight:800;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.card h2 .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);display:inline-block}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+input[type=text],input[type=password],input[type=email],input[type=number]{flex:1;min-width:0;border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:16px;background:#fff;color:var(--ink);outline:none}
+input:focus{border-color:var(--accent)}
+button{border:none;border-radius:12px;padding:12px 18px;font-size:15px;font-weight:700;cursor:pointer;background:var(--accent);color:#fff}
+button:hover{filter:brightness(1.05)}
+button.ghost{background:var(--accent-soft);color:var(--accent)}
+button.danger{background:#FDEBEF;color:var(--hot)}
+button.warn{background:#FCF0DC;color:var(--warn)}
+button.sm{padding:8px 14px;font-size:14px}
+button:disabled{opacity:.5;cursor:not-allowed}
+table{width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed}
+th,td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--line);word-break:break-all}
+th{color:var(--sub);font-weight:600;font-size:12px}
+th.c-t,td.c-t{width:110px}
+th.c-h,td.c-h{width:105px}
+th.c-u,td.c-u{width:70px}
+th.c-a,td.c-a{width:84px}
+th.c-o,td.c-o{width:74px}
+.status{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:700}
+.status.on{background:#E4F3EC;color:var(--ok)}
+.status.off{background:#FDEBEF;color:var(--hot)}
+.empty{color:var(--sub);font-size:13px;padding:14px 4px;text-align:center}
+.msg{font-size:13px;color:var(--sub);margin-top:8px;min-height:18px}
+.msg.err{color:var(--hot)}
+.msg.ok{color:var(--ok)}
+.genbox{border:1px dashed var(--accent);border-radius:12px;padding:12px 14px;margin-top:12px;background:var(--accent-soft);font-family:Consolas,Menlo,monospace;font-size:13px;line-height:1.8;white-space:pre-wrap;word-break:break-all}
+.hidden{display:none!important}
+.toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:#221F33;color:#fff;font-size:14px;padding:10px 18px;border-radius:999px;opacity:0;pointer-events:none;transition:opacity .25s;z-index:99}
+.toast.show{opacity:.95}
+.loading{opacity:.45;pointer-events:none}
+footer{color:var(--sub);font-size:12px;text-align:center;padding:18px 0 30px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="brand">
+    <div class="logo">SP</div>
+    <div>
+      <h1>第二人格测评 · 管理后台</h1>
+      <div class="tag">测试码与测试记录管理</div>
+    </div>
+  </div>
+
+  <!-- 登录视图 -->
+  <div id="view-login" class="card hidden">
+    <h2><span class="dot"></span>管理员登录</h2>
+    <div class="row">
+      <input type="email" id="login-email" placeholder="管理员邮箱" autocomplete="username">
+    </div>
+    <div style="height:10px"></div>
+    <div class="row">
+      <input type="password" id="login-pass" placeholder="密码" autocomplete="current-password">
+    </div>
+    <div class="row" style="margin-top:14px">
+      <button id="btn-login" style="flex:1">登录</button>
+    </div>
+    <div class="msg" id="login-msg"></div>
+  </div>
+
+  <!-- 后台视图 -->
+  <div id="view-panel" class="hidden">
+
+    <div class="card">
+      <div class="toolbar">
+        <h2 style="margin:0"><span class="dot"></span>测试码管理</h2>
+        <button class="ghost sm" id="btn-refresh-codes">刷新</button>
+      </div>
+      <div class="row">
+        <input type="number" id="gen-count" value="10" min="1" max="500" style="flex:0 0 110px">
+        <button id="btn-generate" style="flex:1">生成新码</button>
+      </div>
+      <div class="msg" id="gen-msg"></div>
+      <div id="gen-result" class="genbox hidden"></div>
+      <div style="height:14px"></div>
+      <div id="codes-table"><div class="empty">加载中…</div></div>
+    </div>
+
+    <div class="card">
+      <div class="toolbar">
+        <h2 style="margin:0"><span class="dot"></span>测试记录</h2>
+        <button class="ghost sm" id="btn-refresh-attempts">刷新</button>
+      </div>
+      <div id="attempts-table"><div class="empty">加载中…</div></div>
+    </div>
+
+    <button class="danger" id="btn-logout" style="width:100%;margin-bottom:10px">退出登录</button>
+  </div>
+
+  <footer>本测试纯属娱乐 · 结果仅供参考</footer>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ══════════ 配置：填 Supabase 项目 URL 与 anon key ══════════ */
+var CONFIG = {
+  supabase: {
+    url: "https://udyluqxfizxjtqkohava.supabase.co",     // 形如 https://xxxx.supabase.co
+    anonKey: "sb_publishable_wccfEO4BPB6cxEufxYbNiQ_pI6jWfaG"  // Settings → API → anon public key
+  }
+};
+
+/* ---------- Supabase REST（无第三方依赖） ---------- */
+var SESSION_KEY = "second_persona_admin_session";
+var session = null;
+function sGet() {
+  try { return JSON.parse(localStorage.getItem(SESSION_KEY)) || null; } catch (e) { return null; }
+}
+function sSet(obj) {
+  if (obj) { localStorage.setItem(SESSION_KEY, JSON.stringify(obj)); }
+  else { localStorage.removeItem(SESSION_KEY); }
+  session = obj;
+}
+function expiredAt(expiresIn) {
+  return Date.now() + (expiresIn - 30) * 1000;
+}
+function apiUrl(path) {
+  return CONFIG.supabase.url + path;
+}
+function authHeaders(token) {
+  return {
+    "apikey": CONFIG.supabase.anonKey,
+    "Authorization": "Bearer " + (token || CONFIG.supabase.anonKey),
+    "Content-Type": "application/json"
+  };
+}
+function login(email, password) {
+  return fetch(apiUrl("/auth/v1/token?grant_type=password"), {
+    method: "POST",
+    headers: authHeaders(),
+    body: JSON.stringify({ email: email, password: password })
+  }).then(function (res) {
+    return res.json().then(function (data) {
+      if (!res.ok) { throw new Error((data && (data.msg || data.error_description)) || "登录失败"); }
+      sSet({ access_token: data.access_token, refresh_token: data.refresh_token, expires_at: expiredAt(data.expires_in) });
+      return data;
+    });
+  });
+}
+function refreshSession() {
+  if (!session || !session.refresh_token) { return Promise.reject(new Error("no-session")); }
+  return fetch(apiUrl("/auth/v1/token?grant_type=refresh_token"), {
+    method: "POST",
+    headers: authHeaders(),
+    body: JSON.stringify({ refresh_token: session.refresh_token })
+  }).then(function (res) {
+    return res.json().then(function (data) {
+      if (!res.ok) { throw new Error("refresh-failed"); }
+      sSet({ access_token: data.access_token, refresh_token: data.refresh_token, expires_at: expiredAt(data.expires_in) });
+      return data;
+    });
+  });
+}
+function logout() {
+  if (session) {
+    fetch(apiUrl("/auth/v1/logout"), { method: "POST", headers: authHeaders(session.access_token) }).catch(function () {});
+  }
+  sSet(null);
+}
+function rpc(fn, params) {
+  if (!session) { return Promise.reject(new Error("no-session")); }
+  return fetch(apiUrl("/rest/v1/rpc/" + fn), {
+    method: "POST",
+    headers: authHeaders(session.access_token),
+    body: JSON.stringify(params || {})
+  }).then(function (res) {
+    if (res.status === 401) {
+      return refreshSession().then(function () {
+        return fetch(apiUrl("/rest/v1/rpc/" + fn), {
+          method: "POST",
+          headers: authHeaders(session.access_token),
+          body: JSON.stringify(params || {})
+        });
+      });
+    }
+    return res;
+  }).then(function (res) {
+    return res.json().then(function (data) {
+      if (!res.ok) {
+        var msg = "操作失败";
+        try {
+          if (typeof data === "string") { msg = data; }
+          else if (data && data.message) { msg = data.message; }
+          else if (data && data.msg) { msg = data.msg; }
+        } catch (e) {}
+        throw new Error(msg);
+      }
+      return data;
+    });
+  });
+}
+
+/* ---------- 视图控制 ---------- */
+var viewLogin = document.getElementById("view-login");
+var viewPanel = document.getElementById("view-panel");
+var toastEl = document.getElementById("toast");
+var toastTimer = null;
+function toast(msg) {
+  toastEl.textContent = msg;
+  toastEl.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function () { toastEl.classList.remove("show"); }, 2200);
+}
+function showLogin() {
+  viewLogin.classList.remove("hidden");
+  viewPanel.classList.add("hidden");
+}
+function showPanel() {
+  viewLogin.classList.add("hidden");
+  viewPanel.classList.remove("hidden");
+  refreshAll();
+}
+function setLoading(el, on) {
+  if (on) { el.classList.add("loading"); el.disabled = true; }
+  else { el.classList.remove("loading"); el.disabled = false; }
+}
+
+/* ---------- 码管理 ---------- */
+var TYPE_NAMES = ["白昼完美演员", "深水守密者", "逆风点火者", "午夜清醒者"];
+function shortHash(h) { return h ? h.slice(0, 8) + "…" : "—"; }
+function escapeHtml(s) {
+  return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+  });
+}
+function renderCodes(data) {
+  var box = document.getElementById("codes-table");
+  if (!data || !data.length) {
+    box.innerHTML = '<div class="empty">暂无测试码。点上方「生成新码」创建。</div>';
+    return;
+  }
+  var rows = data.map(function (c) {
+    return '<tr>' +
+      '<td class="c-t">' + escapeHtml(c.created || "—") + '</td>' +
+      '<td class="c-h">' + escapeHtml(shortHash(c.hash)) + '</td>' +
+      '<td class="c-u">' + escapeHtml(String(c.used)) + ' / ' + escapeHtml(String(c.max)) + '</td>' +
+      '<td class="c-a"><span class="status ' + (c.active ? "on" : "off") + '">' + (c.active ? "启用" : "停用") + '</span></td>' +
+      '<td class="c-o"><button class="ghost sm" data-toggle="' + escapeHtml(c.hash) + '" data-active="' + (c.active ? "1" : "0") + '">' + (c.active ? "停用" : "启用") + '</button></td>' +
+      '</tr>';
+  }).join("");
+  box.innerHTML = '<table><colgroup><col class="c-t"><col class="c-h"><col class="c-u"><col class="c-a"><col class="c-o"></colgroup>' +
+    '<thead><tr><th class="c-t">创建时间</th><th class="c-h">码哈希</th><th class="c-u">用量</th><th class="c-a">状态</th><th class="c-o">操作</th></tr></thead>' +
+    '<tbody>' + rows + '</tbody></table>';
+  var btns = box.querySelectorAll("button[data-toggle]");
+  for (var i = 0; i < btns.length; i++) {
+    btns[i].addEventListener("click", function () {
+      var h = this.getAttribute("data-toggle");
+      var active = this.getAttribute("data-active") === "1";
+      toggleCode(h, !active);
+    });
+  }
+}
+function renderAttempts(data) {
+  var box = document.getElementById("attempts-table");
+  if (!data || !data.length) {
+    box.innerHTML = '<div class="empty">暂无测试记录。</div>';
+    return;
+  }
+  var rows = data.map(function (a) {
+    return '<tr>' +
+      '<td class="c-t">' + escapeHtml(a.at || "—") + '</td>' +
+      '<td class="c-t">' + escapeHtml(TYPE_NAMES[a.type] || ("类型 " + a.type)) + '</td>' +
+      '<td class="c-h">' + escapeHtml(a.hash || "—") + '</td>' +
+      '</tr>';
+  }).join("");
+  box.innerHTML = '<table><colgroup><col style="width:34%"><col style="width:38%"><col style="width:28%"></colgroup>' +
+    '<thead><tr><th>时间</th><th>结果类型</th><th>测试码</th></tr></thead>' +
+    '<tbody>' + rows + '</tbody></table>';
+}
+
+/* ---------- 数据操作 ---------- */
+function refreshAll() {
+  refreshCodes(); refreshAttempts();
+}
+function refreshCodes() {
+  var btn = document.getElementById("btn-refresh-codes");
+  setLoading(btn, true);
+  rpc("admin_list_codes", {}).then(function (data) { renderCodes(data); }).catch(function (e) {
+    renderCodes(null);
+    document.getElementById("codes-table").innerHTML = '<div class="empty err">' + escapeHtml(e.message) + '</div>';
+  }).finally(function () { setLoading(btn, false); });
+}
+function refreshAttempts() {
+  var btn = document.getElementById("btn-refresh-attempts");
+  setLoading(btn, true);
+  rpc("admin_list_attempts", { p_limit: 200 }).then(function (data) { renderAttempts(data); }).catch(function (e) {
+    document.getElementById("attempts-table").innerHTML = '<div class="empty err">' + escapeHtml(e.message) + '</div>';
+  }).finally(function () { setLoading(btn, false); });
+}
+function toggleCode(hash, active) {
+  var btn = document.getElementById("btn-refresh-codes");
+  setLoading(btn, true);
+  rpc("admin_toggle_code", { p_hash: hash, p_active: active }).then(function () {
+    toast(active ? "已启用" : "已停用");
+    return refreshCodes();
+  }).catch(function (e) { toast(e.message); }).finally(function () { setLoading(btn, false); });
+}
+function generateCodes() {
+  var count = parseInt(document.getElementById("gen-count").value, 10);
+  if (!count || count < 1) { count = 10; }
+  var btn = document.getElementById("btn-generate");
+  var msg = document.getElementById("gen-msg");
+  var box = document.getElementById("gen-result");
+  msg.textContent = "正在生成…";
+  msg.className = "msg";
+  box.classList.add("hidden");
+  setLoading(btn, true);
+  rpc("admin_generate_codes", { p_count: count }).then(function (data) {
+    if (!data || !data.length) { throw new Error("生成失败"); }
+    box.textContent = data.join("\n");
+    box.classList.remove("hidden");
+    msg.textContent = "已生成 " + data.length + " 个新码（仅本次展示，请立即复制分发）";
+    msg.className = "msg ok";
+    return refreshCodes();
+  }).catch(function (e) {
+    msg.textContent = e.message;
+    msg.className = "msg err";
+  }).finally(function () { setLoading(btn, false); });
+}
+
+/* ---------- 登录 / 登出 ---------- */
+document.getElementById("btn-login").addEventListener("click", function () {
+  var email = document.getElementById("login-email").value.trim();
+  var pass = document.getElementById("login-pass").value;
+  var msg = document.getElementById("login-msg");
+  var btn = document.getElementById("btn-login");
+  if (!email || !pass) { msg.textContent = "请输入邮箱和密码"; msg.className = "msg err"; return; }
+  msg.textContent = "登录中…";
+  msg.className = "msg";
+  setLoading(btn, true);
+  login(email, pass).then(function () {
+    msg.textContent = "";
+    showPanel();
+  }).catch(function (e) {
+    msg.textContent = e.message;
+    msg.className = "msg err";
+    setLoading(btn, false);
+  });
+});
+document.getElementById("btn-logout").addEventListener("click", function () {
+  logout();
+  showLogin();
+  toast("已退出登录");
+});
+document.getElementById("btn-generate").addEventListener("click", generateCodes);
+document.getElementById("btn-refresh-codes").addEventListener("click", refreshCodes);
+document.getElementById("btn-refresh-attempts").addEventListener("click", refreshAttempts);
+
+/* ---------- 启动 ---------- */
+(function init() {
+  if (!CONFIG.supabase.url || !CONFIG.supabase.anonKey) {
+    showLogin();
+    document.getElementById("login-msg").textContent = "后台未配置 Supabase，请联系卖家配置后使用";
+    document.getElementById("login-msg").className = "msg err";
+    document.getElementById("btn-login").disabled = true;
+    return;
+  }
+  var s = sGet();
+  if (s && s.access_token && s.expires_at > Date.now()) {
+    session = s;
+    showPanel();
+  } else if (s && s.refresh_token) {
+    session = s;
+    refreshSession().then(function () { showPanel(); }).catch(function () { showLogin(); });
+  } else {
+    showLogin();
+  }
+})();
+</script>
+</body>
+</html>
