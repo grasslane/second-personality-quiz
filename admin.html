@@ -6,11 +6,11 @@
 <title>第二人格测评 · 管理后台</title>
 <!--
   ════════════════════════════════════════════════════════════
-  管理后台（密钥管理）
+  管理后台（测试码管理）
   ─ 登录：使用你在 Supabase Authentication → Users 里创建的管理员账号
     （邮箱 + 密码），并已执行 select public.grant_admin('你的UID')。
-  ─ 功能：码列表（用量/停用启用）、一键生成新码（明文只展示一次）、
-    测试记录查看、登出。
+  ─ 功能：查看当前测试码（明文，用于自动发货）、一键更换测试码
+    （更换后旧码立即失效，防盗卖）、测试记录查看、登出。
   ─ 配置：下方 CONFIG.supabase 填项目 URL 与 anon key。
   ════════════════════════════════════════════════════════════
 -->
@@ -31,7 +31,7 @@ body{background:var(--bg);color:var(--ink);font-family:"PingFang SC","Microsoft 
 .card h2{font-size:15px;font-weight:800;margin-bottom:12px;display:flex;align-items:center;gap:8px}
 .card h2 .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);display:inline-block}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-input[type=text],input[type=password],input[type=email],input[type=number]{flex:1;min-width:0;border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:16px;background:#fff;color:var(--ink);outline:none}
+input[type=text],input[type=password],input[type=email]{flex:1;min-width:0;border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:16px;background:#fff;color:var(--ink);outline:none}
 input:focus{border-color:var(--accent)}
 button{border:none;border-radius:12px;padding:12px 18px;font-size:15px;font-weight:700;cursor:pointer;background:var(--accent);color:#fff}
 button:hover{filter:brightness(1.05)}
@@ -44,18 +44,15 @@ table{width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed}
 th,td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--line);word-break:break-all}
 th{color:var(--sub);font-weight:600;font-size:12px}
 th.c-t,td.c-t{width:110px}
-th.c-h,td.c-h{width:105px}
-th.c-u,td.c-u{width:70px}
-th.c-a,td.c-a{width:84px}
-th.c-o,td.c-o{width:74px}
-.status{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:700}
-.status.on{background:#E4F3EC;color:var(--ok)}
-.status.off{background:#FDEBEF;color:var(--hot)}
+th.c-h,td.c-h{width:110px}
 .empty{color:var(--sub);font-size:13px;padding:14px 4px;text-align:center}
 .msg{font-size:13px;color:var(--sub);margin-top:8px;min-height:18px}
 .msg.err{color:var(--hot)}
 .msg.ok{color:var(--ok)}
-.genbox{border:1px dashed var(--accent);border-radius:12px;padding:12px 14px;margin-top:12px;background:var(--accent-soft);font-family:Consolas,Menlo,monospace;font-size:13px;line-height:1.8;white-space:pre-wrap;word-break:break-all}
+.codebox{border:1px dashed var(--accent);border-radius:12px;padding:16px;background:var(--accent-soft);text-align:center;margin:6px 0 4px}
+.codebox .code{font-family:Consolas,Menlo,monospace;font-size:28px;font-weight:800;letter-spacing:3px;color:var(--accent);user-select:all}
+.codebox .meta{font-size:12px;color:var(--sub);margin-top:6px}
+.warnline{font-size:12px;color:var(--warn);margin-top:10px}
 .hidden{display:none!important}
 .toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
 .toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:#221F33;color:#fff;font-size:14px;padding:10px 18px;border-radius:999px;opacity:0;pointer-events:none;transition:opacity .25s;z-index:99}
@@ -71,7 +68,7 @@ footer{color:var(--sub);font-size:12px;text-align:center;padding:18px 0 30px}
     <div class="logo">SP</div>
     <div>
       <h1>第二人格测评 · 管理后台</h1>
-      <div class="tag">测试码与测试记录管理</div>
+      <div class="tag">当前测试码 · 更换 · 测试记录</div>
     </div>
   </div>
 
@@ -96,17 +93,27 @@ footer{color:var(--sub);font-size:12px;text-align:center;padding:18px 0 30px}
 
     <div class="card">
       <div class="toolbar">
-        <h2 style="margin:0"><span class="dot"></span>测试码管理</h2>
-        <button class="ghost sm" id="btn-refresh-codes">刷新</button>
+        <h2 style="margin:0"><span class="dot"></span>当前测试码</h2>
+        <button class="ghost sm" id="btn-refresh-code">刷新</button>
       </div>
-      <div class="row">
-        <input type="number" id="gen-count" value="10" min="1" max="500" style="flex:0 0 110px">
-        <button id="btn-generate" style="flex:1">生成新码</button>
+      <div id="code-box" class="codebox"><div class="empty">加载中…</div></div>
+      <div class="row" style="margin-top:12px">
+        <button id="btn-copy" style="flex:1">复制测试码</button>
+        <button class="warn" id="btn-change" style="flex:1">更换测试码</button>
       </div>
-      <div class="msg" id="gen-msg"></div>
-      <div id="gen-result" class="genbox hidden"></div>
-      <div style="height:14px"></div>
-      <div id="codes-table"><div class="empty">加载中…</div></div>
+      <div class="warnline">更换测试码后，旧码立即失效。请把新码同步到你的自动发货设置。</div>
+
+      <div id="change-form" class="hidden" style="margin-top:14px">
+        <div class="row">
+          <input type="text" id="new-code" placeholder="输入新测试码，如 SP-XXXX-XXXX（4 位以上）" maxlength="20" autocomplete="off">
+          <button class="ghost" id="btn-random">随机生成</button>
+        </div>
+        <div class="row" style="margin-top:10px">
+          <button id="btn-confirm-change" style="flex:1">确认更换（旧码立即失效）</button>
+          <button class="ghost" id="btn-cancel-change" style="flex:1">取消</button>
+        </div>
+        <div class="msg" id="change-msg"></div>
+      </div>
     </div>
 
     <div class="card">
@@ -247,42 +254,97 @@ function setLoading(el, on) {
   if (on) { el.classList.add("loading"); el.disabled = true; }
   else { el.classList.remove("loading"); el.disabled = false; }
 }
-
-/* ---------- 码管理 ---------- */
-var TYPE_NAMES = ["白昼完美演员", "深水守密者", "逆风点火者", "午夜清醒者"];
-function shortHash(h) { return h ? h.slice(0, 8) + "…" : "—"; }
 function escapeHtml(s) {
   return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
     return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
   });
 }
-function renderCodes(data) {
-  var box = document.getElementById("codes-table");
-  if (!data || !data.length) {
-    box.innerHTML = '<div class="empty">暂无测试码。点上方「生成新码」创建。</div>';
+
+/* ---------- 当前测试码 ---------- */
+var TYPE_NAMES = ["白昼完美演员", "深水守密者", "逆风点火者", "午夜清醒者"];
+function renderCurrentCode(data) {
+  var box = document.getElementById("code-box");
+  if (!data || !data.code) {
+    box.innerHTML = '<div class="empty">尚未设置测试码，请点「更换测试码」设置。</div>';
     return;
   }
-  var rows = data.map(function (c) {
-    return '<tr>' +
-      '<td class="c-t">' + escapeHtml(c.created || "—") + '</td>' +
-      '<td class="c-h">' + escapeHtml(shortHash(c.hash)) + '</td>' +
-      '<td class="c-u">' + escapeHtml(String(c.used)) + ' / ' + escapeHtml(String(c.max)) + '</td>' +
-      '<td class="c-a"><span class="status ' + (c.active ? "on" : "off") + '">' + (c.active ? "启用" : "停用") + '</span></td>' +
-      '<td class="c-o"><button class="ghost sm" data-toggle="' + escapeHtml(c.hash) + '" data-active="' + (c.active ? "1" : "0") + '">' + (c.active ? "停用" : "启用") + '</button></td>' +
-      '</tr>';
-  }).join("");
-  box.innerHTML = '<table><colgroup><col class="c-t"><col class="c-h"><col class="c-u"><col class="c-a"><col class="c-o"></colgroup>' +
-    '<thead><tr><th class="c-t">创建时间</th><th class="c-h">码哈希</th><th class="c-u">用量</th><th class="c-a">状态</th><th class="c-o">操作</th></tr></thead>' +
-    '<tbody>' + rows + '</tbody></table>';
-  var btns = box.querySelectorAll("button[data-toggle]");
-  for (var i = 0; i < btns.length; i++) {
-    btns[i].addEventListener("click", function () {
-      var h = this.getAttribute("data-toggle");
-      var active = this.getAttribute("data-active") === "1";
-      toggleCode(h, !active);
-    });
+  box.innerHTML = '<div class="code">' + escapeHtml(data.code) + '</div>' +
+    '<div class="meta">最近更新：' + escapeHtml(data.updated || "—") + '</div>';
+}
+function refreshCurrentCode() {
+  var btn = document.getElementById("btn-refresh-code");
+  setLoading(btn, true);
+  rpc("admin_get_current_code", {}).then(function (data) {
+    renderCurrentCode(data);
+  }).catch(function (e) {
+    document.getElementById("code-box").innerHTML = '<div class="empty">' + escapeHtml(e.message) + '</div>';
+  }).finally(function () { setLoading(btn, false); });
+}
+function copyCurrentCode() {
+  var code = (document.querySelector("#code-box .code") || {}).textContent;
+  if (!code) { toast("暂无可复制的测试码"); return; }
+  var done = function () { toast("已复制，可直接粘贴到自动发货设置"); };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(code).then(done).catch(function () { fallbackCopy(code, done); });
+  } else {
+    fallbackCopy(code, done);
   }
 }
+function fallbackCopy(text, done) {
+  var ta = document.createElement("textarea");
+  ta.value = text;
+  ta.style.position = "fixed";
+  ta.style.opacity = "0";
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand("copy"); done(); } catch (e) { toast("复制失败，请手动选择复制"); }
+  document.body.removeChild(ta);
+}
+
+/* ---------- 更换测试码 ---------- */
+function randomCode() {
+  var pool = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+  function seg() {
+    var s = "";
+    for (var i = 0; i < 4; i++) { s += pool[Math.floor(Math.random() * pool.length)]; }
+    return s;
+  }
+  return "SP-" + seg() + "-" + seg();
+}
+function openChangeForm() {
+  document.getElementById("change-form").classList.remove("hidden");
+  document.getElementById("new-code").value = "";
+  document.getElementById("change-msg").textContent = "";
+  document.getElementById("change-msg").className = "msg";
+  document.getElementById("new-code").focus();
+}
+function closeChangeForm() {
+  document.getElementById("change-form").classList.add("hidden");
+}
+function confirmChange() {
+  var input = document.getElementById("new-code").value.trim();
+  if (input.length < 4) {
+    document.getElementById("change-msg").textContent = "测试码至少 4 位";
+    document.getElementById("change-msg").className = "msg err";
+    return;
+  }
+  var btn = document.getElementById("btn-confirm-change");
+  var msg = document.getElementById("change-msg");
+  msg.textContent = "正在更换…";
+  msg.className = "msg";
+  setLoading(btn, true);
+  rpc("admin_set_code", { p_code: input }).then(function (data) {
+    closeChangeForm();
+    toast("测试码已更换，旧码立即失效");
+    refreshCurrentCode();
+    return data;
+  }).catch(function (e) {
+    msg.textContent = e.message;
+    msg.className = "msg err";
+  }).finally(function () { setLoading(btn, false); });
+}
+
+/* ---------- 测试记录 ---------- */
 function renderAttempts(data) {
   var box = document.getElementById("attempts-table");
   if (!data || !data.length) {
@@ -300,55 +362,15 @@ function renderAttempts(data) {
     '<thead><tr><th>时间</th><th>结果类型</th><th>测试码</th></tr></thead>' +
     '<tbody>' + rows + '</tbody></table>';
 }
-
-/* ---------- 数据操作 ---------- */
-function refreshAll() {
-  refreshCodes(); refreshAttempts();
-}
-function refreshCodes() {
-  var btn = document.getElementById("btn-refresh-codes");
-  setLoading(btn, true);
-  rpc("admin_list_codes", {}).then(function (data) { renderCodes(data); }).catch(function (e) {
-    renderCodes(null);
-    document.getElementById("codes-table").innerHTML = '<div class="empty err">' + escapeHtml(e.message) + '</div>';
-  }).finally(function () { setLoading(btn, false); });
-}
 function refreshAttempts() {
   var btn = document.getElementById("btn-refresh-attempts");
   setLoading(btn, true);
   rpc("admin_list_attempts", { p_limit: 200 }).then(function (data) { renderAttempts(data); }).catch(function (e) {
-    document.getElementById("attempts-table").innerHTML = '<div class="empty err">' + escapeHtml(e.message) + '</div>';
+    document.getElementById("attempts-table").innerHTML = '<div class="empty">' + escapeHtml(e.message) + '</div>';
   }).finally(function () { setLoading(btn, false); });
 }
-function toggleCode(hash, active) {
-  var btn = document.getElementById("btn-refresh-codes");
-  setLoading(btn, true);
-  rpc("admin_toggle_code", { p_hash: hash, p_active: active }).then(function () {
-    toast(active ? "已启用" : "已停用");
-    return refreshCodes();
-  }).catch(function (e) { toast(e.message); }).finally(function () { setLoading(btn, false); });
-}
-function generateCodes() {
-  var count = parseInt(document.getElementById("gen-count").value, 10);
-  if (!count || count < 1) { count = 10; }
-  var btn = document.getElementById("btn-generate");
-  var msg = document.getElementById("gen-msg");
-  var box = document.getElementById("gen-result");
-  msg.textContent = "正在生成…";
-  msg.className = "msg";
-  box.classList.add("hidden");
-  setLoading(btn, true);
-  rpc("admin_generate_codes", { p_count: count }).then(function (data) {
-    if (!data || !data.length) { throw new Error("生成失败"); }
-    box.textContent = data.join("\n");
-    box.classList.remove("hidden");
-    msg.textContent = "已生成 " + data.length + " 个新码（仅本次展示，请立即复制分发）";
-    msg.className = "msg ok";
-    return refreshCodes();
-  }).catch(function (e) {
-    msg.textContent = e.message;
-    msg.className = "msg err";
-  }).finally(function () { setLoading(btn, false); });
+function refreshAll() {
+  refreshCurrentCode(); refreshAttempts();
 }
 
 /* ---------- 登录 / 登出 ---------- */
@@ -375,8 +397,16 @@ document.getElementById("btn-logout").addEventListener("click", function () {
   showLogin();
   toast("已退出登录");
 });
-document.getElementById("btn-generate").addEventListener("click", generateCodes);
-document.getElementById("btn-refresh-codes").addEventListener("click", refreshCodes);
+document.getElementById("btn-refresh-code").addEventListener("click", refreshCurrentCode);
+document.getElementById("btn-copy").addEventListener("click", copyCurrentCode);
+document.getElementById("btn-change").addEventListener("click", openChangeForm);
+document.getElementById("btn-random").addEventListener("click", function () {
+  var inp = document.getElementById("new-code");
+  inp.value = randomCode();
+  inp.focus();
+});
+document.getElementById("btn-confirm-change").addEventListener("click", confirmChange);
+document.getElementById("btn-cancel-change").addEventListener("click", closeChangeForm);
 document.getElementById("btn-refresh-attempts").addEventListener("click", refreshAttempts);
 
 /* ---------- 启动 ---------- */
