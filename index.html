@@ -121,6 +121,14 @@ button:focus-visible{outline:3px solid color-mix(in srgb, var(--accent) 55%, tra
 }
 .result-name{font-size:34px;font-weight:800;line-height:1.3;margin-top:8px}
 .result-tagline{font-size:15px;color:#5A5568;margin-top:10px}
+.result-slogan{font-size:14.5px;color:var(--sub);margin-top:9px;font-style:italic}
+.donut-wrap{position:relative;width:210px;height:210px;margin:6px auto 4px}
+.donut{width:210px;height:210px;display:block}
+.donut circle{transition:stroke-dashoffset .9s ease .12s}
+.donut-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.dc-label{font-size:11.5px;color:var(--sub);letter-spacing:.1em}
+.dc-name{font-size:16px;font-weight:800;color:var(--ink);margin-top:3px;max-width:110px;line-height:1.25}
+.dc-pct{font-size:22px;font-weight:800;color:var(--accent);margin-top:2px}
 .result-card{padding:22px;margin-top:16px}
 .block-title{font-size:13px;font-weight:600;letter-spacing:.08em;color:var(--accent);margin-bottom:10px}
 .desc-list{list-style:none}
@@ -130,6 +138,16 @@ button:focus-visible{outline:3px solid color-mix(in srgb, var(--accent) 55%, tra
 .two-col{display:grid;gap:14px}
 .mini{background:#FAF7F0;border-radius:14px;padding:14px 15px}
 .mini-h{font-size:13px;font-weight:600;color:#4A3FA8;margin-bottom:8px}
+.mini-p{font-size:14px;color:#5A5568;line-height:1.7;margin:0}
+.trigger-card,.moment-card{padding:18px 20px}
+.trigger-label,.moment-label{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:12px;font-weight:700;letter-spacing:.06em;
+  padding:4px 12px;border-radius:999px;background:var(--accent-soft);color:var(--accent);
+}
+.moment-label{background:rgba(224,80,107,.1);color:var(--hot)}
+.trigger-text,.moment-text{font-size:15.5px;color:#423D55;line-height:1.8;margin-top:11px}
+.moment-text{color:#5A5568}
 .dot-list{list-style:none}
 .dot-list li{position:relative;padding-left:15px;font-size:14px;color:#5A5568;margin-bottom:7px}
 .dot-list li::before{content:"";position:absolute;left:1px;top:8px;width:5px;height:5px;border-radius:50%;background:var(--accent)}
@@ -239,9 +257,18 @@ button:focus-visible{outline:3px solid color-mix(in srgb, var(--accent) 55%, tra
       <div class="shared-banner is-hidden" id="shared-banner">朋友分享给你的测试结果</div>
       <h1 class="result-name" id="r-name"></h1>
       <p class="result-tagline" id="r-tagline"></p>
+      <p class="result-slogan" id="r-slogan"></p>
     </div>
     <div class="card result-card type-bars">
       <div class="block-title">你的暗面构成</div>
+      <div class="donut-wrap">
+        <svg class="donut" id="r-donut" viewBox="0 0 200 200" aria-hidden="true"></svg>
+        <div class="donut-center">
+          <div class="dc-label">核心人格</div>
+          <div class="dc-name" id="r-donut-name"></div>
+          <div class="dc-pct" id="r-donut-pct"></div>
+        </div>
+      </div>
       <div id="r-bars"></div>
       <p class="shadow-line" id="r-shadow"></p>
     </div>
@@ -250,8 +277,26 @@ button:focus-visible{outline:3px solid color-mix(in srgb, var(--accent) 55%, tra
       <ul class="desc-list" id="r-desc"></ul>
     </div>
     <div class="card result-card">
+      <div class="block-title">白天 vs 深夜</div>
+      <div class="two-col">
+        <div class="mini"><div class="mini-h">白天的你</div><p class="mini-p" id="r-day"></p></div>
+        <div class="mini"><div class="mini-h">深夜的你</div><p class="mini-p" id="r-night"></p></div>
+      </div>
+    </div>
+    <div class="card result-card">
       <div class="block-title">你的性格底色</div>
       <p class="why-text" id="r-why"></p>
+    </div>
+    <div class="card result-card trigger-card">
+      <div class="trigger-label">第二人格上线瞬间</div>
+      <p class="trigger-text" id="r-trigger"></p>
+    </div>
+    <div class="card result-card">
+      <div class="block-title">别人眼里 vs 熟人眼里</div>
+      <div class="two-col">
+        <div class="mini"><div class="mini-h">别人眼里</div><p class="mini-p" id="r-mask-o"></p></div>
+        <div class="mini"><div class="mini-h">熟人眼里</div><p class="mini-p" id="r-mask-c"></p></div>
+      </div>
     </div>
     <div class="card result-card">
       <div class="block-title">高光时刻 · 情绪雷区</div>
@@ -259,6 +304,17 @@ button:focus-visible{outline:3px solid color-mix(in srgb, var(--accent) 55%, tra
         <div class="mini"><div class="mini-h">高光时刻</div><ul class="dot-list" id="r-highs"></ul></div>
         <div class="mini"><div class="mini-h">情绪雷区</div><ul class="dot-list mine" id="r-mines"></ul></div>
       </div>
+    </div>
+    <div class="card result-card">
+      <div class="block-title">亲密关系 · 隐藏技能</div>
+      <div class="two-col">
+        <div class="mini"><div class="mini-h">亲密关系里的你</div><p class="mini-p" id="r-intimacy"></p></div>
+        <div class="mini"><div class="mini-h">你的隐藏技能</div><p class="mini-p" id="r-skill"></p></div>
+      </div>
+    </div>
+    <div class="card result-card moment-card">
+      <div class="moment-label">反差瞬间</div>
+      <p class="moment-text" id="r-moment"></p>
     </div>
     <div class="card result-card">
       <div class="block-title">关键词</div>
@@ -442,12 +498,26 @@ const CONFIG = {
     {
       name: "白昼完美演员",
       tagline: "在人前永远得体可靠，把情绪管理到分毫不差。",
+      color: "#6B5BD3",
+      slogan: "世界需要靠谱的人，而我，就是那个靠谱",
       portrait: [
-        "你的第二人格，是那个“永远不失控”的掌控者。日程表是你的镇定剂，计划被完成的那一刻，你的世界才安静下来。",
-        "你不是没有情绪，而是把情绪排进了日程——先解决，再消化。深夜的 emo 在你这里属于“待办事项”，处理完就归档。",
-        "别人眼中的你：靠谱、滴水不漏。只有你知道，那份滴水不漏，是用多少个“再检查一遍”换来的。"
+        "计划被划掉的那一瞬间，是你一天里最爽的时刻。日程表一塌你就烦躁——不是矫情，是身体比脑子先报警。",
+        "别人夸你“稳”，你不知道怎么解释：那不是天赋，是习惯把每件事过三遍。连发消息都要检查两遍错别字的人，能不稳吗。",
+        "你的情绪不是没有，是被排进了待办清单——先处理，再消化，最后归档。深夜的 emo 在你这里属于“加急任务”，处理完立刻关机睡觉。"
       ],
-      why: "你的性格底色是“责任”和“掌控”。你从小就被“做完、做好”的信念塑造，习惯把主动权握在自己手里。对你来说，失控比失败更可怕——失败可以复盘，失控没有抓手。",
+      duality: {
+        day: "白天的你：人形行程表。几点吃饭、几点回消息、几点交活，全在脑子里自动排好序。临时打乱你计划的人，会收获你“没事没事”的微笑，和内心一整页的吐槽。",
+        night: "深夜的你：对着镜子复盘今天的每一句话。“那句话是不是说太冲了？”“早知道就该多检查一遍”——白天的完美演员，晚上才卸妆，面对真实的自己。"
+      },
+      why: "你的底色是“责任”和“掌控”。从小被“做完、做好”养大，你把主动权看得比什么都重。对你来说，失控比失败更可怕：失败还能复盘，失控没有抓手。",
+      trigger: "当事情开始失控——比如计划被放鸽子、deadline 前材料还没齐——你的第二人格秒上线：先冷静列好方案 A/B/C，然后在心里把搞砸这件事的人骂上八百遍，全程面不改色。",
+      mask: {
+        others: "别人眼里的你：滴水不漏的靠谱选手，好像永远不会出错。",
+        close: "熟人眼里的你：一个听到“差不多就行了”会当场黑脸、但心里其实慌得很的人。"
+      },
+      intimacy: "恋爱里的你习惯把一切安排好：去哪吃、几点见、plan B 是什么。可你很少说“我需要你”——这四个字对你来说，比交一份完美报告难多了。",
+      skill: "救火能力：任何烂摊子到你手上，都会自动变成一张清晰的 checklist。团建、搬家、突发状况，你是那个被所有人下意识看向的人。",
+      moment: "最反差的一刻：平时连迟到都要道歉的人，会在重要关头突然开口说“听我的”，语气冷到全场安静——那一刻，连你自己都愣了一下。",
       highs: [
         "越是混乱的场合你越清醒，天然是团队的主心骨",
         "立过的 flag 基本都能实现，说到做到是你的基本盘"
@@ -456,24 +526,38 @@ const CONFIG = {
         "有人打乱你的计划，你会表面微笑、内心爆炸",
         "对自己太苛刻，完成了 99 分还盯着扣掉的那 1 分"
       ],
-      tags: ["自律", "高要求", "情绪管理大师", "目标感", "细节控", "说到做到"],
+      tags: ["自律", "细节控", "救火队长", "说到做到", "内心戏多", "完美主义"],
       tips: [
-        { h: "给身边的人", p: "ta 不需要安慰，需要你认真对待 ta 的每一个承诺；临时改约请提前说。" },
-        { h: "给 ta 自己", p: "偶尔允许“差不多”发生，世界不会塌，你也值得休息。" }
+        { h: "给身边的人", p: "别临时改 ta 的约，别敷衍 ta 的承诺。ta 说“没事”的时候，给 ta 一个确定的下一步，比安慰更管用。" },
+        { h: "给 ta 自己", p: "允许自己交一版“差不多”的试试——世界不会塌，你也不会。你已经够好了，真的。" }
       ],
       cp: "逆风点火者",
       cpDesc: "和 ta 最有火花——ta 负责打破规矩，你负责把局面稳稳接住，一收一放刚刚好。",
-      quote: "白天我把生活过成作品，深夜才允许自己问一句：累吗？—— 不累，但可以更好。"
+      quote: "白天的我把生活过成作品，夜里才敢问自己一句：“今天，我有没有对自己好一点？”——答案通常是：明天吧。"
     },
     {
       name: "深水守密者",
       tagline: "表面风平浪静，心里早已暗流汹涌。",
+      color: "#4A9BE8",
+      slogan: "把温柔都给世界，把委屈都留给自己",
       portrait: [
-        "你的第二人格，是那个“想太多”的守密者。别人一句无心的话，你能在心里演完一整部电影，还顺手把结局也编了。",
-        "你习惯先照顾所有人的情绪，自己的委屈却从不声张。群里没人接话你会尴尬，朋友难过你会比 ta 更难过。",
-        "你不是没有脾气，只是脾气都朝着自己——“算了，ta 也不容易。”这句话是你的口头禅，也是你的内耗来源。"
+        "群聊里没人接你的话，你会假装刚才没说话，然后尴尬到想注销账号。朋友一句“你最近还好吗”，能让你瞬间鼻子一酸。",
+        "你太擅长“算了”：被插队算了、被误会算了。委屈攒到临界点，你的处理方式是——悄悄把那个人从心里挪出去，不吵不闹。",
+        "你不是没有脾气，你的脾气都朝着自己。“可能是我太敏感了”“ta 也不是故意的”——这些话你每天对自己说八百遍。"
       ],
-      why: "你的性格底色是“共情”和“温柔”。你太擅长看见别人的需要，却很少练习看见自己的。你怕麻烦别人，宁可自己多扛一点——这份懂事，让人心疼。",
+      duality: {
+        day: "白天的你：全场的情绪雷达。谁不开心了、气氛哪里不对、谁和谁之间有事，你三秒内就能感知，然后默默把场面圆过去——像个没有姓名的隐形人。",
+        night: "深夜的你：把白天没收到的情绪全部补放一遍。别人一句无心的话，你能在心里演完一整部电影，还给结局编了三个版本。"
+      },
+      why: "你的底色是“共情”和“温柔”。你太擅长看见别人的需要，却很少练习看见自己的。你怕麻烦别人，宁可自己多扛一点——这份懂事，让人心疼。",
+      trigger: "当你在乎的人表现出一点点疏远，你的第二人格就会上线：开始疯狂复盘自己哪里做错了，然后提前把“被抛弃”的剧本写好，随时准备接受。",
+      mask: {
+        others: "别人眼里的你：温柔、好说话、永远在线的树洞，好像没什么能难倒你。",
+        close: "熟人眼里的你：一个把“我没事”说到所有人都信、但其实希望有人能拆穿这句谎话的人。"
+      },
+      intimacy: "恋爱里的你是付出型选手：记得对方所有喜好，生日礼物提前一个月准备。但你几乎不主动提需求——“他要是懂我，早就该知道了”是你的内耗开关。",
+      skill: "情绪翻译：你能从“随便”两个字里听出三种情绪、五种潜台词。和任何人聊天，你都是那个“说得不多但句句精准”的人。",
+      moment: "最反差的一刻：平时连大声说话都很少的人，会在某天突然平静地说出“我忍你很久了”——轻描淡写，却让空气瞬间凝固。",
       highs: [
         "朋友公认的“情绪树洞”，和你说话从不担心被评判",
         "直觉敏锐，总能第一时间察觉气氛和人心变化"
@@ -482,24 +566,38 @@ const CONFIG = {
         "委屈攒着不说，攒到某天突然爆发或悄悄远离",
         "把“被需要”当成安全感，容易为不值得的人消耗自己"
       ],
-      tags: ["共情", "细腻", "温柔", "内耗", "树洞体质", "替人着想"],
+      tags: ["共情", "树洞体质", "细腻", "隐忍", "情绪雷达", "容易内耗"],
       tips: [
-        { h: "给身边的人", p: "多主动问 ta 一句“你呢”，ta 会记很久；ta 说没事的时候，往往最有事。" },
-        { h: "给 ta 自己", p: "你的感受也值得被优先对待，说出口的委屈，才是真的爱自己。" }
+        { h: "给身边的人", p: "多主动问 ta 一句“你呢”，ta 会记很久。ta 说“没事”的时候，别信，多待一会儿。" },
+        { h: "给 ta 自己", p: "你的感受也值得被优先对待。委屈说出口，才是真的爱自己——别总当那个懂事的人。" }
       ],
       cp: "午夜清醒者",
       cpDesc: "和 ta 意外合拍——一个愿意倾诉，一个擅长接住，安静里全是懂得。",
-      quote: "我把温柔都给了世界，把深水留给自己。其实我也在等一个人，问一句：那你呢？"
+      quote: "我把温柔都给了世界，把深水留给自己。其实我也在等一个人，问我一句：“那你呢？”"
     },
     {
       name: "逆风点火者",
       tagline: "平时安安静静，易燃易炸，一点就着。",
+      color: "#E0506B",
+      slogan: "世界让我循规蹈矩，我偏要玩点野的",
       portrait: [
-        "你的第二人格，是那个“说走就走”的反叛者。规矩在你眼里不是用来遵守的，是用来评估要不要破的。",
-        "你对无聊的耐受度极低：排队超过十分钟就想换方案，“计划赶不上变化”才是你的舒适区。",
-        "你藏得最好的不是脾气，是野心——那句“凭什么不行”，你只对自己说，说完就去干了。"
+        "排队超过十分钟你就在心里策划逃生路线。“计划赶不上变化”不是你的口头禅，是你的生存方式。",
+        "你藏得最好的不是脾气，是野心。那句“凭什么不行”你只对自己说，说完就去干了——所以别人总觉得你莽，其实你算得很清楚。",
+        "你讨厌被定义：“你应该稳定”“你应该低调”——这些话对你来说，约等于邀请函，邀请你去做点相反的事。"
       ],
-      why: "你的性格底色是“自由”和“好奇心”。你天生反感被定义，越是“你应该”，你越想问“凭什么”。你不是故意唱反调，你只是拒绝一个没有选择的人生。",
+      duality: {
+        day: "白天的你：看起来挺乖的。开会认真、上班靠谱、和谁都处得来——没人知道你的收藏夹里躺着一堆“辞职去开咖啡店”“一个人去西藏”的计划。",
+        night: "深夜的你：开始给自己的冲动“投票”。明天要不要请假去看海？要不要给那个讨厌的甲方发一封真诚的“我不干了”？——你经常在“算了”和“冲了”之间反复横跳。"
+      },
+      why: "你的底色是“自由”和“好奇心”。你天生反感被安排，越是“你应该”，你越想问“凭什么”。你不是故意唱反调，你只是拒绝一个没有选择的人生。",
+      trigger: "当有人跟你说“这不行”“你做不到”“规矩就是这样”——你的第二人格秒上线：“哦？那我偏要试试。”",
+      mask: {
+        others: "别人眼里的你：热情、自来熟、像个小太阳，好像永远没有烦恼。",
+        close: "熟人眼里的你：一个嘴上说“随便吧”、其实早就决定要去做、只是懒得解释的人。"
+      },
+      intimacy: "恋爱里的你是气氛担当：约会有新点子、吵架先低头（然后下次还敢）、纪念日永远有惊喜。但你也需要空间——你爱一个人，不代表愿意被“管”。",
+      skill: "破局能力：所有人都觉得走不通的事，你能找到第三条路。不是聪明，是你根本不信“只有一条路”这件事。",
+      moment: "最反差的一刻：平时嘻嘻哈哈没正形的人，会在关键时刻突然正经，一句“这事我来扛”让所有人安静下来——原来你认真起来这么帅。",
       highs: [
         "说干就干的行动力，很多人想了一年的生活，你已经活了一年",
         "气氛担当，有你在的场合永远不会冷场"
@@ -508,24 +606,38 @@ const CONFIG = {
         "上头的时候说话不过脑子，事后又暗自后悔",
         "三分钟热度，兴趣来得快去得也快"
       ],
-      tags: ["行动派", "反叛", "好奇心", "直球", "气氛担当", "火花"],
+      tags: ["行动派", "反叛", "气氛担当", "直球", "有野心", "三分钟热度"],
       tips: [
-        { h: "给身边的人", p: "ta 说不去的时候，其实在等你拉一把；别和 ta 硬碰硬，给个台阶就下。" },
-        { h: "给 ta 自己", p: "冲动之前数三秒，你要的不是麻烦，是尽兴——这两件事可以兼得。" }
+        { h: "给身边的人", p: "ta 说“不去”的时候，其实在等你拉一把。别和 ta 硬碰硬，给个台阶，ta 会记你好久。" },
+        { h: "给 ta 自己", p: "冲动之前先数三秒——你要的不是麻烦，是尽兴，这两件事可以兼得。留一点热血给真正重要的事。" }
       ],
       cp: "白昼完美演员",
       cpDesc: "和 ta 最有火花——ta 负责规划，你负责让它精彩，一个收一个放。",
-      quote: "这世界我来都来了，总要疯一次。白天我守规矩，夜里我想把规矩点着，看它烧成烟花。"
+      quote: "这世界我来都来了，总要疯一次。白天我守规矩，夜里我想把规矩点着，看它烧成烟花——然后第二天假装什么都没发生。"
     },
     {
       name: "午夜清醒者",
       tagline: "越热闹越安静，习惯和所有人保持一步距离。",
+      color: "#2F9E8F",
+      slogan: "热闹是他们的，我只要我的那点安静",
       portrait: [
-        "你的第二人格，是那个“看得太清楚”的观察者。热闹是大家的，你站在旁边微笑的那一个——不是不合群，是不想演。",
-        "你对关系的标准很高：宁缺毋滥，宁可独处，也不愿将就一段消耗你的关系。",
-        "独处不是孤独，是你的充电方式。没人找得到你的时候，你反而最完整。"
+        "聚会的角落、饭局上的微笑、“哈哈哈”的捧场——你配合得很好，但心里有个进度条：电量 80%、60%、30%，到点就走，绝不恋战。",
+        "你交朋友靠“筛选”不靠“数量”：微信几千人，能让你半夜打电话的，一只手数得过来。你不觉得这有什么问题——高质量的关系，本来就不需要太多。",
+        "你不是冷漠，你只是把热情当成稀缺品，只给值得的人。别人觉得你难接近，你知道：那是你的保护色，也是你的底线。"
       ],
-      why: "你的性格底色是“清醒”和“边界感”。你早早看懂了人情世故的剧本，却懒得参演。你不是冷漠，你只是把有限的热情，留给值得的人。",
+      duality: {
+        day: "白天的你：社交续航选手。会议、应酬、寒暄，你全部拿捏，甚至演得很像那么回事——只有你自己知道，每次社交结束你都需要独处充电，像手机插回充电器。",
+        night: "深夜的你：人间清醒。白天没想明白的事、没敢说的话，夜里全想明白了——然后默默决定：明天开始，有些关系可以淡一点了。"
+      },
+      why: "你的底色是“清醒”和“边界感”。你早早看懂了人情世故的剧本，却懒得参演。你不是冷漠，你只是把有限的热情，留给值得的人。",
+      trigger: "当有人试图“为你好”地越界：催你结婚、问你怎么不合群、劝你“多出去走走”——你的第二人格上线：礼貌微笑，然后在心里给对方的分组改名为“保持距离”。",
+      mask: {
+        others: "别人眼里的你：安静、礼貌、有点高冷，猜不透你在想什么。",
+        close: "熟人眼里的你：嘴毒但心软，吐槽起来一套一套，其实比谁都重感情——只是从不说。"
+      },
+      intimacy: "恋爱里的你：不粘人，但专一。你需要很多独处时间，但这不代表不爱你——你只是需要先把自己充满电，才有能量爱别人。",
+      skill: "一眼看穿：你几乎不会在重要选择上栽跟头。选朋友、选工作、选对象，你的直觉准到可怕——因为你早就把“不合适”的选项提前排除了。",
+      moment: "最反差的一刻：平时寡言少语的人，会在某个深夜突然发一条长长的朋友圈，句句扎心、看得人沉默——然后第二天一早删掉，假装无事发生。",
       highs: [
         "判断力一流，几乎不会在重要选择上栽跟头",
         "情绪稳定，是朋友眼中的“定海神针”"
@@ -534,14 +646,14 @@ const CONFIG = {
         "习惯性拒绝帮助，什么都自己扛，扛不住了也不说",
         "边界感太强，容易把真心的人挡在门外"
       ],
-      tags: ["清醒", "边界感", "独立", "洞察力", "情绪稳定", "宁缺毋滥"],
+      tags: ["清醒", "边界感", "独立", "洞察力", "外冷内热", "宁缺毋滥"],
       tips: [
-        { h: "给身边的人", p: "别逼 ta“合群”，尊重 ta 的安静，就是最好的陪伴；ta 主动找你，是把你放在很里面。" },
-        { h: "给 ta 自己", p: "偶尔主动一次，世界不会因此侵入你的边界——反而会还你惊喜。" }
+        { h: "给身边的人", p: "别逼 ta“合群”。尊重 ta 的安静，就是最好的陪伴——ta 主动找你，是把你放在名单最上面了。" },
+        { h: "给 ta 自己", p: "偶尔主动一次不会怎样。世界不会因此入侵你的边界，反而会还你一点惊喜。" }
       ],
       cp: "深水守密者",
       cpDesc: "和 ta 意外合拍——一个安静倾诉，一个安静接住，两个人都懂“陪伴不必喧哗”。",
-      quote: "我不是不合群，只是我的热闹都在深海里。白天我陪世界演戏，夜里我陪自己清醒。"
+      quote: "我不是不合群，我只是懒得演。白天我陪世界客套，夜里我陪自己清醒——我的热闹，都在深海里。"
     }
   ]
 };
@@ -836,16 +948,60 @@ const CONFIG = {
     return idxs;
   }
 
+  var DONUT_R = 78;
+  var DONUT_C = 2 * Math.PI * DONUT_R;
+  function renderDonut(scores, mainIdx) {
+    var svg = document.getElementById("r-donut");
+    var total = 0;
+    for (var t = 0; t < scores.length; t++) { total += scores[t]; }
+    if (total <= 0) { return; }
+    svg.innerHTML = "";
+    var cum = 0;
+    for (var t = 0; t < scores.length; t++) {
+      var pct = scores[t] / total * 100;
+      if (pct <= 0) { continue; }
+      var seg = DONUT_C * pct / 100;
+      var c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      c.setAttribute("cx", 100); c.setAttribute("cy", 100);
+      c.setAttribute("r", DONUT_R);
+      c.setAttribute("fill", "none");
+      c.setAttribute("stroke", CONFIG.results[t].color || "#B9B2C4");
+      c.setAttribute("stroke-width", 22);
+      c.setAttribute("stroke-linecap", "round");
+      c.setAttribute("transform", "rotate(-90 100 100)");
+      c.setAttribute("stroke-dasharray", seg.toFixed(2) + " " + DONUT_C.toFixed(2));
+      c.setAttribute("stroke-dashoffset", DONUT_C.toFixed(2));
+      c.setAttribute("data-seg", t);
+      svg.appendChild(c);
+      cum += seg;
+    }
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        var segs = svg.querySelectorAll("circle");
+        var off = 0;
+        for (var s = 0; s < segs.length; s++) {
+          var circ = segs[s];
+          var segLen = parseFloat(circ.getAttribute("stroke-dasharray").split(" ")[0]);
+          circ.setAttribute("stroke-dashoffset", (-off).toFixed(2));
+          off += segLen;
+        }
+      });
+    });
+    document.getElementById("r-donut-name").textContent = CONFIG.results[mainIdx].name;
+    document.getElementById("r-donut-pct").textContent =
+      Math.round(scores[mainIdx] / total * 100) + "%";
+  }
+
   function renderResult(scores, shared) {
     var main = argmax(scores);
     var order = rankTypes(scores);
-    var second = order[1];
     var data = CONFIG.results[main];
 
     document.getElementById("shared-banner").classList.toggle("is-hidden", !shared);
 
     document.getElementById("r-name").textContent = data.name;
     document.getElementById("r-tagline").textContent = data.tagline;
+    document.getElementById("r-slogan").textContent = data.slogan ? "“" + data.slogan + "”" : "";
 
     var descBox = document.getElementById("r-desc");
     descBox.innerHTML = "";
@@ -855,7 +1011,16 @@ const CONFIG = {
       descBox.appendChild(li);
     });
 
+    document.getElementById("r-day").textContent = data.duality.day;
+    document.getElementById("r-night").textContent = data.duality.night;
+
     document.getElementById("r-why").textContent = data.why;
+    document.getElementById("r-trigger").textContent = data.trigger;
+    document.getElementById("r-mask-o").textContent = data.mask.others;
+    document.getElementById("r-mask-c").textContent = data.mask.close;
+    document.getElementById("r-intimacy").textContent = data.intimacy;
+    document.getElementById("r-skill").textContent = data.skill;
+    document.getElementById("r-moment").textContent = data.moment;
 
     var highsBox = document.getElementById("r-highs");
     highsBox.innerHTML = "";
@@ -900,9 +1065,11 @@ const CONFIG = {
     document.getElementById("r-quote").textContent = data.quote;
     document.getElementById("r-quote-src").textContent = "— 来自「" + data.name + "」的第二人格";
 
+    renderDonut(scores, main);
+
     var barsBox = document.getElementById("r-bars");
     barsBox.innerHTML = "";
-    [main, second].forEach(function (typeIdx, pos) {
+    order.forEach(function (typeIdx) {
       var pct = Math.round(scores[typeIdx] / N * 100);
       var row = document.createElement("div");
       row.className = "bar-row";
@@ -913,6 +1080,7 @@ const CONFIG = {
       track.className = "bar-track";
       var fill = document.createElement("span");
       fill.className = "bar-fill";
+      fill.style.background = CONFIG.results[typeIdx].color || "var(--accent)";
       fill.setAttribute("data-w", pct + "%");
       var pctEl = document.createElement("span");
       pctEl.className = "pct";
@@ -923,9 +1091,8 @@ const CONFIG = {
       row.appendChild(pctEl);
       barsBox.appendChild(row);
     });
-    var others = order.slice(2);
     document.getElementById("r-shadow").textContent =
-      "你的暗面里，还有「" + CONFIG.results[others[0]].name + "」「" + CONFIG.results[others[1]].name + "」的影子。";
+      "你的暗面不是一座孤岛——四种人格都在你身上，只是水位不同。";
 
     show("view-result");
     requestAnimationFrame(function () {
@@ -979,8 +1146,6 @@ const CONFIG = {
     var maxW = W - M * 2;
     var main = argmax(scores);
     var order = rankTypes(scores);
-    var second = order[1];
-    var others = order.slice(2);
     var data = CONFIG.results[main];
     var accent = CONFIG.primary || "#6B5BD3";
     var hot = CONFIG.hot || "#E0506B";
@@ -1023,23 +1188,58 @@ const CONFIG = {
     ctx.stroke();
     y += 30;
 
-    /* 结果名 */
+    /* 结果名 + slogan */
     ctx.fillStyle = accent;
     ctx.font = "800 50px " + FONT;
     ctx.fillText(data.name, W / 2, y);
-    y += 66;
+    y += 64;
     ctx.fillStyle = "#5A5568";
     ctx.font = "500 19px " + FONT;
     ctx.fillText(data.tagline, W / 2, y);
-    y += 44;
+    y += 34;
+    if (data.slogan) {
+      ctx.fillStyle = sub;
+      ctx.font = "400 15px " + FONT;
+      ctx.fillText("“" + data.slogan + "”", W / 2, y);
+      y += 40;
+    }
 
-    /* 暗面构成 */
+    /* 暗面构成：环形图 + 四维条 */
     ctx.textAlign = "left";
     ctx.fillStyle = accent;
     ctx.font = "600 16px " + FONT;
     ctx.fillText("你的暗面构成", M, y);
     y += 30;
-    [main, second].forEach(function (typeIdx) {
+    var totalS = 0;
+    for (var tt = 0; tt < scores.length; tt++) { totalS += scores[tt]; }
+    if (totalS > 0) {
+      var dr = 74, dcx = W / 2, dcy = y + dr + 6;
+      var ang = -Math.PI / 2;
+      ctx.lineWidth = 24;
+      ctx.lineCap = "butt";
+      for (var tt = 0; tt < scores.length; tt++) {
+        var pct2 = scores[tt] / totalS * 100;
+        if (pct2 <= 0) { continue; }
+        var sweep = pct2 / 100 * Math.PI * 2 - 0.055;
+        ctx.strokeStyle = CONFIG.results[tt].color || "#C9C4D6";
+        ctx.beginPath();
+        ctx.arc(dcx, dcy, dr, ang, ang + sweep);
+        ctx.stroke();
+        ang += pct2 / 100 * Math.PI * 2;
+      }
+      ctx.fillStyle = ink;
+      ctx.font = "800 22px " + FONT;
+      ctx.textAlign = "center";
+      ctx.fillText(CONFIG.results[main].name, dcx, dcy - 8);
+      ctx.fillStyle = accent;
+      ctx.font = "700 30px " + FONT;
+      ctx.fillText(Math.round(scores[main] / totalS * 100) + "%", dcx, dcy + 26);
+      ctx.textAlign = "left";
+      y += dr * 2 + 38;
+    } else {
+      y += 16;
+    }
+    order.forEach(function (typeIdx) {
       var pct = Math.round(scores[typeIdx] / N * 100);
       ctx.fillStyle = ink;
       ctx.font = "600 15px " + FONT;
@@ -1054,17 +1254,14 @@ const CONFIG = {
       rr(ctx, M, y, maxW, 12, 6);
       ctx.fill();
       var bw = Math.max(12, maxW * pct / 100);
-      var grad = ctx.createLinearGradient(M, 0, M + maxW, 0);
-      grad.addColorStop(0, accent);
-      grad.addColorStop(1, "#8E7CFF");
-      ctx.fillStyle = grad;
+      ctx.fillStyle = CONFIG.results[typeIdx].color || accent;
       rr(ctx, M, y, bw, 12, 6);
       ctx.fill();
       y += 34;
     });
     ctx.fillStyle = sub;
     ctx.font = "400 14px " + FONT;
-    ctx.fillText("你的暗面里，还有「" + CONFIG.results[others[0]].name + "」「" + CONFIG.results[others[1]].name + "」的影子。", M, y);
+    ctx.fillText("你的暗面不是一座孤岛——四种人格都在你身上，只是水位不同。", M, y);
     y += 46;
 
     function sectionTitle(label) {
@@ -1140,16 +1337,77 @@ const CONFIG = {
       y = ty + 18;
     }
 
+    function miniBlock(label, text) {
+      var lines = wrapText(ctx, text, maxW - 36);
+      var bh = 46 + lines.length * 30 + 18;
+      ctx.fillStyle = soft;
+      rr(ctx, M, y, maxW, bh, 16);
+      ctx.fill();
+      ctx.fillStyle = "#4A3FA8";
+      ctx.font = "600 15px " + FONT;
+      ctx.fillText(label, M + 18, y + 16);
+      ctx.fillStyle = "#5A5568";
+      ctx.font = "400 18px " + FONT;
+      var ty = y + 50;
+      for (var i = 0; i < lines.length; i++) {
+        ctx.fillText(lines[i], M + 18, ty);
+        ty += 30;
+      }
+      y = ty + 16;
+    }
+    function labelLine(label, text, color) {
+      ctx.fillStyle = color;
+      rr(ctx, M, y - 12, 5, 24, 2.5);
+      ctx.fill();
+      ctx.fillStyle = color;
+      ctx.font = "700 15px " + FONT;
+      ctx.fillText(label, M + 14, y);
+      y += 26;
+      ctx.fillStyle = "#423D55";
+      ctx.font = "400 18px " + FONT;
+      var lines = wrapText(ctx, text, maxW - 16);
+      for (var i = 0; i < lines.length; i++) {
+        ctx.fillText(lines[i], M + 14, y);
+        y += 30;
+      }
+      y += 16;
+    }
+
     sectionTitle("关于你的第二人格");
     data.portrait.forEach(para);
 
+    ctx.fillStyle = accent;
+    ctx.font = "600 16px " + FONT;
+    ctx.fillText("白天 vs 深夜", M, y);
+    y += 30;
+    miniBlock("白天的你", data.duality.day);
+    miniBlock("深夜的你", data.duality.night);
+
     sectionTitle("你的性格底色");
     para(data.why);
+
+    labelLine("第二人格上线瞬间", data.trigger, accent);
+
+    ctx.fillStyle = accent;
+    ctx.font = "600 16px " + FONT;
+    ctx.fillText("别人眼里 vs 熟人眼里", M, y);
+    y += 30;
+    miniBlock("别人眼里", data.mask.others);
+    miniBlock("熟人眼里", data.mask.close);
 
     sectionTitle("高光时刻");
     bullets(data.highs, accent);
     sectionTitle("情绪雷区");
     bullets(data.mines, hot);
+
+    ctx.fillStyle = accent;
+    ctx.font = "600 16px " + FONT;
+    ctx.fillText("亲密关系 · 隐藏技能", M, y);
+    y += 30;
+    miniBlock("亲密关系里的你", data.intimacy);
+    miniBlock("你的隐藏技能", data.skill);
+
+    labelLine("反差瞬间", data.moment, hot);
 
     sectionTitle("关键词");
     tags();
