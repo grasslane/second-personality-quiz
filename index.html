@@ -192,7 +192,6 @@ button:focus-visible{outline:3px solid color-mix(in srgb, var(--accent) 55%, tra
 
   <!-- ═══ 视图：封面（测试码门禁） ═══ -->
   <section id="view-cover" class="view cover" aria-label="测试封面">
-    <span class="brand"><span class="dot"></span><span id="brand-text">LOGO｜你的品牌名</span></span>
     <svg class="duo-mark" viewBox="0 0 96 96" fill="none" aria-hidden="true">
       <circle cx="38" cy="48" r="26" fill="currentColor" opacity="0.28"/>
       <circle cx="58" cy="48" r="26" fill="currentColor" opacity="0.62"/>
@@ -208,7 +207,6 @@ button:focus-visible{outline:3px solid color-mix(in srgb, var(--accent) 55%, tra
     <div class="code-box">
       <label class="code-label" for="code-input">请输入测试码</label>
       <input id="code-input" type="text" maxlength="16" autocomplete="off" spellcheck="false" placeholder="如 SP-XXXX-XXXX">
-      <p class="code-hint" id="code-hint">每个测试码可测试 2 次 · 测试码请向购买渠道获取</p>
       <p class="code-error" id="code-error"></p>
     </div>
     <div class="cover-cta">
@@ -561,12 +559,10 @@ const CONFIG = {
   st.setProperty("--ink", CONFIG.ink);
   st.setProperty("--sub", CONFIG.sub);
 
-  document.getElementById("brand-text").textContent = CONFIG.logoText + "｜" + CONFIG.brandName;
   document.getElementById("cover-hl").textContent = CONFIG.title.hl;
   document.getElementById("cover-sub").textContent = CONFIG.subtitle;
   document.getElementById("cover-intro").textContent = CONFIG.intro;
   document.getElementById("code-input").placeholder = CONFIG.codePlaceholder;
-  document.getElementById("code-hint").textContent = CONFIG.codeHint;
   document.getElementById("cover-foot").textContent = CONFIG.footerText;
   document.getElementById("result-foot").textContent = CONFIG.footerText;
 
